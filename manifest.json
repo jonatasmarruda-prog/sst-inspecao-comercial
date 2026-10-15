@@ -1,0 +1,36 @@
+{
+  "id": "/",
+  "name": "Sistema de Gestão SST",
+  "short_name": "SST",
+  "description": "Sistema profissional de inspeções de Segurança e Saúde no Trabalho.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "fullscreen"
+  ],
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
+  "theme_color": "#8b1018",
+  "categories": [
+    "business",
+    "productivity"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/icon.svg?v=20261006-02",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg?v=20261006-02",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
