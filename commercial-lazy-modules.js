@@ -16,7 +16,7 @@ function script(src){
       return;
     }
     const s=document.createElement('script');
-    s.src=absolute?src:('./'+src+'?lazy=1&v=20261015');
+    s.src=absolute?src:('./'+src+'?lazy=1&v=20261015-cipafix01');
     s.async=true;
     s.onload=()=>{s.dataset.lazyReady='1';resolve(true)};
     s.onerror=()=>reject(new Error('Falha ao carregar '+src));
