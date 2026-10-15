@@ -1,0 +1,98 @@
+:root{--premium-bg:#070b10;--premium-panel:#0d131a;--premium-panel2:#111922;--premium-line:#26313d;--premium-text:#f5f7fa;--premium-muted:#a8b2bd;--premium-red:#ff2d20}
+body{background:radial-gradient(circle at 50% -10%,#18222d 0,#070b10 42%,#05080c 100%)!important;color:var(--premium-text)!important}
+.top{background:rgba(5,9,13,.94)!important;border-bottom:1px solid #26313d!important;box-shadow:0 8px 35px #0008!important;backdrop-filter:blur(14px)}
+.topin{max-width:1180px!important;padding:10px 22px!important;min-height:82px}
+.logo{width:96px!important;height:64px!important;border-radius:0!important;background:transparent!important;padding:0!important;object-fit:contain!important;display:block!important}
+.brand b{font-size:19px!important;letter-spacing:.3px}.brand span{color:#aeb8c3!important}
+#cloudState{color:#45f06b!important;background:#111a16;padding:9px 13px;border-radius:999px;border:1px solid #24472d}
+.wrap{max-width:1180px!important;padding:24px!important}
+.hero{background:transparent!important;border:0!important;box-shadow:none!important;padding:8px 0 30px!important}
+.badge{background:#131a22!important;color:#dbe4ec!important;border:1px solid #2b3743!important}
+.hero h1{display:none}.hero>p{display:none}.today{background:transparent!important;border:0!important;margin:8px 0 28px!important;padding:0!important;text-align:center}.today small{color:#697784}.today strong{font-size:22px!important;color:#f7f9fb}.today span{color:#8e9ba7}
+.title{color:#fff!important;text-align:left!important;font-size:18px!important;margin:0 0 14px!important}
+.tiles{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important}
+.tile{min-height:190px!important;background:linear-gradient(145deg,#10171f,#0b1117)!important;border:1px solid #27323d!important;border-radius:20px!important;padding:24px!important;box-shadow:0 14px 38px #0007!important;position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s,border-color .18s!important}
+.tile:after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px}.tile:hover{transform:translateY(-3px);border-color:#3b4754;box-shadow:0 20px 45px #000a}
+.tile .ico{font-size:44px!important;text-align:center;margin-bottom:8px}.tile b{font-size:17px!important;text-align:center;display:block}.tile span{font-size:13px!important;text-align:center;color:#b5bec8;margin-top:8px!important;line-height:1.45}
+.fire:after{background:#ff2d20}.safety:after{background:#49df35}.machine:after{background:#ffd21c}.epi:after{background:#1688ff}.accident:after{background:#b24cff}.general:after{background:#19d8e8}
+#openHistory{margin-top:20px!important;background:linear-gradient(145deg,#111821,#0c1218)!important;color:#f5f7fa!important;border:1px solid #27323d!important;min-height:82px;border-radius:18px!important;text-align:left!important;padding:20px!important;font-size:16px!important;box-shadow:0 12px 30px #0006!important}
+.statusline{color:#8f9ba7!important;margin-top:18px!important}
+.card{background:#0d131a!important;border-color:#26313d!important;color:#f4f6f8!important;box-shadow:0 14px 35px #0007!important}.field label,.sectionTitle,.equipment h3,.check b{color:#f4f6f8!important}.field input,.field select,.field textarea,.checkrow select{background:#101820!important;color:#f4f6f8!important;border-color:#2a3642!important}.secondary{background:#17212b!important;color:#f4f6f8!important}.counter div{background:#121b24!important;color:#fff!important}.equipment,.check,.photoCard{background:#0b1219!important;border-color:#293641!important}
+.sigwrap{background:#fff!important;border:2px solid #94a3b8!important;box-shadow:inset 0 0 0 1px #e2e8f0,0 8px 22px #0002!important}.sigwrap canvas{background:#fff!important;color:#111827!important;border:0!important;touch-action:none!important;cursor:crosshair!important}.sigwrap:before{content:"ASSINE DENTRO DO QUADRO";display:block;background:#f8fafc;color:#64748b;font-size:9px;font-weight:900;letter-spacing:.8px;text-align:center;padding:6px;border-bottom:1px solid #e2e8f0}
+.reportShell,.reportPage{background:#fff!important;color:#17202b!important}.reportPage{border-radius:0}.reportHeader{border-bottom-color:#8b1018}.reportLogo{width:92px!important;height:92px!important;background:#fff!important;object-fit:contain!important}
+.photoTools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.cameraBtn,.galleryBtn{min-height:52px!important;border-radius:14px!important;font-weight:900!important;border:1px solid #334155!important;box-shadow:0 10px 24px #0004!important}.cameraBtn{background:linear-gradient(145deg,#b91c1c,#ef4444)!important;color:#fff!important}.galleryBtn{background:#17212b!important;color:#f8fafc!important}#photoInput{display:none!important}.photoHint{margin-top:9px;font-size:11px;color:#94a3b8;line-height:1.45}.photoCard{overflow:hidden}.photoCard img{width:100%!important;height:220px!important;background:#f8fafc!important;object-fit:contain!important;object-position:center!important;display:block!important}.rphotos img{width:100%!important;height:150px!important;object-fit:contain!important;object-position:center!important;background:#fff!important}
+@media(max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:560px){.wrap{padding:14px!important}.topin{padding:8px 14px!important}.logo{width:64px!important;height:64px!important}.brand b{font-size:16px!important}.tiles{grid-template-columns:1fr!important;gap:12px!important}.tile{min-height:155px!important;padding:20px!important}.tile .ico{font-size:38px!important}.reportLogo{width:76px!important;height:76px!important}.photoTools{grid-template-columns:1fr!important}.photoGrid{grid-template-columns:1fr!important}.photoCard img{height:auto!important;max-height:360px!important;min-height:220px!important;object-fit:contain!important}.rphotos{grid-template-columns:1fr!important}.rphotos img{height:auto!important;max-height:260px!important;object-fit:contain!important}}
+
+/* TBM — contraste isolado dos cards dinamicos de Iluminacao e Sirene */
+.premium-extra{background:#fff!important;color:#222!important;border:1px solid #cbd5e1!important;border-left:4px solid #8b1018!important;border-radius:12px!important;box-shadow:0 8px 22px #0002!important}
+.premium-extra,.premium-extra *,.premium-extra h1,.premium-extra h2,.premium-extra h3,.premium-extra h4,.premium-extra h5,.premium-extra h6,.premium-extra label,.premium-extra b,.premium-extra strong,.premium-extra span,.premium-extra .title{color:#222!important}
+.premium-extra h3{color:#111!important;font-weight:900!important}
+.premium-extra label{color:#333!important;font-weight:800!important}
+.premium-extra .title{color:#111!important;font-weight:900!important}
+.premium-extra .check,.premium-extra .checkrow{background:#fff!important;color:#222!important}
+.premium-extra .checkrow b{color:#222!important}
+.premium-extra input,.premium-extra textarea,.premium-extra select{background:#fff!important;color:#111!important;border:1px solid #c7cdd3!important}
+.premium-extra input::placeholder,.premium-extra textarea::placeholder{color:#777!important;opacity:1!important}
+.premium-extra select option{background:#fff!important;color:#111!important}
+.premium-extra .danger{color:#fff!important}
+@media(max-width:560px){.premium-extra{padding:14px!important}.premium-extra .checkrow{grid-template-columns:1fr!important}.premium-extra select{width:100%!important}}
+
+/* trigger: investigacao acidente 2 */
+
+/* TBM — contraste isolado das opções de Identificação das falhas */
+.accident-causes .accident-cause{
+  color:#212529!important;
+  font-weight:500!important;
+}
+
+/* TBM — Solid Badges corporativos para todos os checklists */
+.choices button,.tbm-fire-check-choices button,#ptAlturaOverlay .pt-check-actions button,.nr24-statuses button{background:#e9edf2!important;color:#17202b!important;border:1px solid #d8dee7!important;box-shadow:none!important}
+.choices button.ok,.tbm-fire-check-choices button.ok,#ptAlturaOverlay .pt-check-actions button.ok,.nr24-statuses button.ok{background-color:#198754!important;color:#ffffff!important;border:none!important}
+.choices button.no,.tbm-fire-check-choices button.no,#ptAlturaOverlay .pt-check-actions button.no,.nr24-statuses button.no{background-color:#dc3545!important;color:#ffffff!important;border:none!important}
+.choices button.na,.tbm-fire-check-choices button.na,#ptAlturaOverlay .pt-check-actions button.na,.nr24-statuses button.na{background-color:#6c757d!important;color:#ffffff!important;border:none!important}
+.checkrow select[data-check]{background:#e9edf2!important;color:#17202b!important;border:1px solid #d8dee7!important;font-weight:900!important}
+.checkrow select[data-check].tbm-status-conforme{background-color:#198754!important;color:#ffffff!important;border:none!important}
+.checkrow select[data-check].tbm-status-nao-conforme{background-color:#dc3545!important;color:#ffffff!important;border:none!important}
+.checkrow select[data-check].tbm-status-na{background-color:#6c757d!important;color:#ffffff!important;border:none!important}
+.premium-extra .checkrow select[data-check].tbm-status-conforme{background-color:#198754!important;color:#ffffff!important;border:none!important}
+.premium-extra .checkrow select[data-check].tbm-status-nao-conforme{background-color:#dc3545!important;color:#ffffff!important;border:none!important}
+.premium-extra .checkrow select[data-check].tbm-status-na{background-color:#6c757d!important;color:#ffffff!important;border:none!important}
+
+
+/* TBM CONTRAST GUARD 2026.10.14 */
+/* Regra visual: superficies claras usam texto escuro; cabecalhos escuros usam texto claro. */
+:is(.cipaCard,.cgCard,.cgEditBox,.brigCard,.brigMetric,.brigSession,.brigModalBox,.extCard,.premium-extra,.reportShell,.reportPage){
+  color:#17202b!important;
+}
+:is(.cipaCard,.cgCard,.cgEditBox,.brigCard,.brigMetric,.brigSession,.brigModalBox,.extCard,.premium-extra,.reportShell,.reportPage)
+:is(h1,h2,h3,h4,h5,h6,label,p,b,strong,td,th,li){
+  color:#17202b!important;
+}
+:is(.cipaCard,.cgCard,.cgEditBox,.brigCard,.brigModalBox,.extCard,.premium-extra)
+:is(input,select,textarea){
+  background:#fff!important;
+  color:#111827!important;
+  -webkit-text-fill-color:#111827!important;
+  border-color:#cbd5e1!important;
+}
+:is(.cipaCard,.cgCard,.cgEditBox,.brigCard,.brigModalBox,.extCard,.premium-extra)
+:is(input,textarea)::placeholder{
+  color:#6b7280!important;
+  opacity:1!important;
+}
+:is(.cipaTop,.cgTop,.brigTop,.extTop,.top){
+  color:#fff!important;
+}
+:is(.cipaTop,.cgTop,.brigTop,.extTop,.top)
+:is(h1,h2,h3,h4,p,b,strong,span,small){
+  color:#fff!important;
+}
+:is(.cipaPrimary,.cipaSuccess,.cgP,.brigPrimary,.brigDark,.brigGreen,.brigDanger,.extP,.primary,.success,.blue,.danger){
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+:is(.cipaSecondary,.cgS,.brigSoft,.secondary){
+  color:#17202b!important;
+  -webkit-text-fill-color:#17202b!important;
+}
