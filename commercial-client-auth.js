@@ -133,9 +133,39 @@ async function ready(force=false){
     return;
   }
   try{
-    const session=await waitForInitialSession(api,8000);
+    let session=null;
+
+    // Primeiro tenta restaurar diretamente a sessão recebida da tela de Login.
+    // sessionStorage é usado apenas no mesmo navegador/aba e os tokens não vão na URL.
+    try{
+      const raw=sessionStorage.getItem('sst_auth_handoff_v1');
+      if(raw){
+        const handoff=JSON.parse(raw);
+        const fresh=handoff?.created_at && (Date.now()-Number(handoff.created_at))<120000;
+        if(fresh&&handoff?.access_token&&handoff?.refresh_token){
+          const restored=await withTimeout(
+            api.sb.auth.setSession({
+              access_token:String(handoff.access_token),
+              refresh_token:String(handoff.refresh_token)
+            }),
+            8000,
+            'Não foi possível restaurar sua sessão.'
+          );
+          if(restored.error)throw restored.error;
+          session=restored.data?.session||null;
+        }
+        sessionStorage.removeItem('sst_auth_handoff_v1');
+      }
+    }catch(e){
+      console.warn('[SST SESSION HANDOFF]',e);
+      try{sessionStorage.removeItem('sst_auth_handoff_v1')}catch{}
+    }
+
+    // Fallback oficial do Supabase para acessos diretos/abas já autenticadas.
+    if(!session)session=await waitForInitialSession(api,8000);
+
     if(!session){
-      location.replace('./?v=mobileauth03');
+      location.replace('./?v=mobileauth04');
       return;
     }
     const accessCheck=await withTimeout(
@@ -176,7 +206,7 @@ function bind(){
   if(!api?.configured||authSubscription)return;
   const result=api.sb.auth.onAuthStateChange((event,session)=>{
     if(event==='SIGNED_OUT'){
-      location.replace('./?v=mobileauth03');
+      location.replace('./?v=mobileauth04');
       return;
     }
     if(event==='TOKEN_REFRESHED'&&authenticated)return;
