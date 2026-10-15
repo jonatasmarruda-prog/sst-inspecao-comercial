@@ -16,8 +16,8 @@ input{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:11px;font-s
 input:focus{border-color:#8b1018;box-shadow:0 0 0 3px #8b101818}
 .pw{position:relative}.pw input{padding-right:52px}
 .eye{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:9px;background:#f1f5f9;font-size:18px;cursor:pointer}
-button.action{width:100%;padding:13px;border:0;border-radius:11px;font-weight:900;cursor:pointer;margin-top:10px;font-size:15px}
-.primary{background:#9f111b;color:#fff}.secondary{background:#e2e8f0;color:#17202b}
+button.action{width:100%;padding:13px;border:0;border-radius:11px;font-weight:900;cursor:pointer;margin-top:14px;font-size:15px}
+.primary{background:#9f111b;color:#fff}
 button:disabled,input:disabled{opacity:.6;cursor:not-allowed}
 .msg{min-height:20px;font-size:12px;line-height:1.45;margin-top:12px;color:#475569}.err{color:#991b1b}.ok{color:#166534}
 .small{margin-top:15px;font-size:11px;text-align:center;color:#94a3b8}
@@ -27,19 +27,20 @@ button:disabled,input:disabled{opacity:.6;cursor:not-allowed}
 <div class="card">
   <div class="badge">🔒 ACESSO CONTROLADO</div>
   <h1>Sistema de Gestão SST</h1>
-  <p>Entre com seu e-mail e senha para acessar os dados da sua empresa.</p>
-  <label for="email">E-mail</label>
-  <input id="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false">
+  <p>Digite o Login e a Senha fornecidos pelo administrador.</p>
+
+  <label for="loginField">Login</label>
+  <input id="loginField" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Seu login">
+
   <label for="pass">Senha</label>
   <div class="pw">
-    <input id="pass" type="password" autocomplete="current-password">
+    <input id="pass" type="password" autocomplete="current-password" placeholder="Sua senha">
     <button id="eye" class="eye" type="button" aria-label="Mostrar senha">👁️</button>
   </div>
+
   <button id="loginBtn" class="action primary" type="button">Entrar</button>
-  <button id="createBtn" class="action secondary" type="button">Criar acesso</button>
-  <button id="forgotBtn" class="action secondary" type="button">Esqueci minha senha</button>
-  <div id="msg" class="msg">Preparando acesso seguro...</div>
-  <div class="small">Sistema Comercial SST • acesso individual por empresa</div>
+  <div id="msg" class="msg">Entre para continuar.</div>
+  <div class="small">Sistema Comercial SST • acesso liberado pelo administrador</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -48,25 +49,13 @@ button:disabled,input:disabled{opacity:.6;cursor:not-allowed}
 'use strict';
 const SB_URL='https://cbyoetsdhohmrpzjrttf.supabase.co';
 const SB_KEY='sb_publishable_ODkVvlEdCvEOUEuPCKjOCg_v4RuGkQD';
+const RESOLVE_URL=SB_URL+'/functions/v1/sst-commercial-login-resolve';
 const $=id=>document.getElementById(id);
 const msg=$('msg');
 
 function say(t,k=''){msg.textContent=t||'';msg.className='msg '+k}
-function busy(v,label='Entrando...'){
-  ['email','pass','loginBtn','createBtn','forgotBtn'].forEach(id=>$(id).disabled=!!v);
-  $('loginBtn').textContent=v?label:'Entrar';
-}
-function friendly(e){
-  const raw=String(e?.message||e||'');
-  const s=raw.toLowerCase();
-  if(s.includes('invalid login credentials')||s.includes('invalid credentials'))return 'E-mail ou senha incorretos.';
-  if(s.includes('email not confirmed'))return 'Seu e-mail ainda não foi liberado.';
-  if(s.includes('rate limit')||s.includes('too many'))return 'Muitas tentativas. Aguarde um pouco e tente novamente.';
-  if(s.includes('failed to fetch')||s.includes('network'))return 'Falha de conexão com o servidor. Atualize a página e tente novamente.';
-  if(s.includes('already')&&(s.includes('registered')||s.includes('exists')))return 'Este e-mail já possui cadastro. Use Entrar ou Esqueci minha senha.';
-  return raw||'Não foi possível concluir o acesso.';
-}
-async function cleanupOldCache(){
+function busy(v){['loginField','pass','loginBtn'].forEach(id=>$(id).disabled=!!v);$('loginBtn').textContent=v?'Entrando...':'Entrar'}
+async function clearOldCache(){
   try{
     if('serviceWorker' in navigator){
       const regs=await navigator.serviceWorker.getRegistrations();
@@ -80,86 +69,46 @@ async function cleanupOldCache(){
     }
   }catch{}
 }
-function openApp(){
-  const u='./app.html?access=ok&v=20261015-03';
-  location.href=u;
-}
-if(!window.supabase?.createClient){
-  say('Não foi possível carregar o serviço de acesso. Atualize a página.','err');
-  return;
-}
-const sb=window.supabase.createClient(SB_URL,SB_KEY,{
-  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
-});
-await cleanupOldCache();
+if(!window.supabase?.createClient){say('Serviço de acesso indisponível. Atualize a página.','err');return}
+const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+await clearOldCache();
 
 $('eye').onclick=()=>{
   const p=$('pass'),show=p.type==='password';
   p.type=show?'text':'password';
   $('eye').textContent=show?'🙈':'👁️';
 };
-$('email').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
+$('loginField').oninput=()=>{$('loginField').value=$('loginField').value.toLowerCase().replace(/\s+/g,'')};
+$('loginField').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
 $('pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
 
 $('loginBtn').onclick=async()=>{
   try{
-    const email=$('email').value.trim().toLowerCase();
-    const password=$('pass').value;
-    if(!email||!password)throw new Error('Informe e-mail e senha.');
+    const login=$('loginField').value.trim().toLowerCase(),password=$('pass').value;
+    if(!login||!password)throw new Error('Informe o Login e a Senha.');
     busy(true);say('Validando acesso...');
+    const resolve=await Promise.race([
+      fetch(RESOLVE_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({login})}),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo de conexão excedido. Tente novamente.')),12000))
+    ]);
+    const info=await resolve.json().catch(()=>({}));
+    if(!resolve.ok||!info?.ok)throw new Error(info?.message||'Login ou senha incorretos.');
+
     const result=await Promise.race([
-      sb.auth.signInWithPassword({email,password}),
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo de conexão excedido. Tente novamente.')),15000))
+      sb.auth.signInWithPassword({email:info.internalEmail,password}),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo de conexão excedido. Tente novamente.')),12000))
     ]);
-    if(result.error)throw result.error;
-    if(!result.data?.session)throw new Error('Sessão não foi criada.');
+    if(result.error)throw new Error('Login ou senha incorretos.');
+    if(!result.data?.session)throw new Error('Não foi possível iniciar a sessão.');
+
     say('Acesso liberado. Abrindo o sistema...','ok');
-    await cleanupOldCache();
-    openApp();
+    await clearOldCache();
+    location.href='./app.html?access=ok&v=20261015-login02';
   }catch(e){
-    busy(false);say(friendly(e),'err');
-  }
-};
-
-$('createBtn').onclick=async()=>{
-  try{
-    const email=$('email').value.trim().toLowerCase();
-    const password=$('pass').value;
-    if(!email||!password)throw new Error('Informe e-mail e senha.');
-    if(password.length<8)throw new Error('A senha precisa ter pelo menos 8 caracteres.');
-    busy(true,'Criando acesso...');say('Criando seu acesso...');
-    const r=await Promise.race([
-      fetch(SB_URL+'/functions/v1/sst-commercial-signup',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','apikey':SB_KEY},
-        body:JSON.stringify({email,password,fullName:''})
-      }),
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo de conexão excedido. Tente novamente.')),15000))
-    ]);
-    const out=await r.json().catch(()=>({}));
-    if(!r.ok||!out?.ok)throw new Error(out?.message||'Não foi possível criar o acesso.');
-    const auth=await sb.auth.signInWithPassword({email,password});
-    if(auth.error)throw auth.error;
-    if(!auth.data?.session)throw new Error('Conta criada, mas a sessão não foi iniciada.');
-    say('Acesso criado. Abrindo o sistema...','ok');
-    await cleanupOldCache();
-    openApp();
-  }catch(e){
-    busy(false);say(friendly(e),'err');
-  }
-};
-
-$('forgotBtn').onclick=async()=>{
-  try{
-    const email=$('email').value.trim().toLowerCase();
-    if(!email)throw new Error('Informe seu e-mail.');
-    busy(true,'Enviando...');say('Solicitando recuperação...');
-    const redirectTo=new URL('./commercial-reset.html',location.href).href;
-    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
-    if(error)throw error;
-    busy(false);say('Link solicitado. Verifique sua caixa de entrada e também o Spam.','ok');
-  }catch(e){
-    busy(false);say(friendly(e),'err');
+    busy(false);
+    const t=String(e?.message||e||'Não foi possível entrar.');
+    say(t.includes('Acesso bloqueado')?t:(t.includes('Tempo de conexão')?t:'Login ou senha incorretos.'),'err');
   }
 };
 
@@ -167,13 +116,11 @@ try{
   const {data}=await sb.auth.getSession();
   if(data?.session){
     say('Sessão encontrada. Abrindo o sistema...','ok');
-    await cleanupOldCache();
-    openApp();
+    location.href='./app.html?access=ok&v=20261015-login02';
     return;
   }
 }catch{}
-say('Entre para continuar.');
-$('email').focus();
+$('loginField').focus();
 })();
 </script>
 </body>
