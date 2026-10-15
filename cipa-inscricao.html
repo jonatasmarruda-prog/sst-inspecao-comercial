@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="robots" content="noindex,nofollow">
+<title>Inscrição de Candidato à CIPA</title>
+<style>
+*{box-sizing:border-box}
+:root{--teal:#0f766e;--navy:#0f2940;--ink:#17202b;--muted:#64748b;--line:#dbe2e8;--bg:#eef3f6}
+body{margin:0;background:linear-gradient(180deg,#071621 0,#0f2940 230px,var(--bg) 230px);font-family:Inter,Arial,Helvetica,sans-serif;color:var(--ink)}
+.wrap{max-width:720px;margin:auto;padding:22px 14px 40px}
+.head{color:#fff;text-align:center;padding:14px 10px 24px}
+.logo{width:150px;height:78px;object-fit:contain;background:transparent;border-radius:0;padding:0;box-shadow:none}
+.head h1{margin:14px 0 6px;font-size:27px}.head p{margin:0;color:#d6e2ea;font-size:13px}
+.card{background:#fff;border:1px solid #d9e2e8;border-radius:20px;padding:20px;box-shadow:0 18px 46px #0002}
+.meta{background:#effaf8;border:1px solid #b7e4dc;border-radius:14px;padding:13px;margin-bottom:18px;display:grid;gap:5px}
+.meta b{color:#0f766e}.meta span{font-size:12px;color:#52606d}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:13px}.field label{display:block;font-size:12px;font-weight:900;margin:0 0 6px;color:#334155}
+.field input,.field select{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;color:#111827;font-size:15px;outline:none}
+.field input:focus,.field select:focus{border-color:var(--teal);box-shadow:0 0 0 3px #0f766e18}
+.btn{width:100%;border:0;border-radius:12px;padding:14px;font-weight:900;font-size:15px;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;cursor:pointer}
+.btn:disabled{opacity:.6;cursor:wait}
+.hint{font-size:11px;line-height:1.45;color:var(--muted);margin:10px 0 0}
+.msg{display:none;margin-top:14px;padding:14px;border-radius:12px;font-size:13px;line-height:1.45}
+.ok{display:block;background:#ecfdf5;color:#166534;border:1px solid #bbf7d0}
+.err{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.number{font-size:36px;font-weight:1000;letter-spacing:2px;display:block;margin:5px 0}
+.signatureBox{margin:4px 0 16px}.signatureCanvasWrap{border:2px dashed #94a3b8;border-radius:12px;background:#fff;overflow:hidden;touch-action:none}.signatureCanvasWrap.confirmed{border-style:solid;border-color:#16a34a;box-shadow:0 0 0 3px #16a34a16}.signatureCanvasWrap canvas{display:block;width:100%;height:180px;background:#fff;touch-action:none}.signatureActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}.sigBtn{border:0;border-radius:10px;padding:11px;font-weight:900;cursor:pointer}.sigClear{background:#e2e8f0;color:#17202b}.sigConfirm{background:#0f766e;color:#fff}.sigStatus{font-size:11px;margin-top:7px;color:#64748b}.sigStatus.ok{color:#15803d;font-weight:800}
+.receiptPanel{display:none;margin-top:16px;padding:18px;border:1px solid #86efac;background:#f0fdf4;border-radius:16px}.receiptPanel.on{display:block}.receiptPanel h2{margin:0 0 6px;color:#166534;font-size:20px}.receiptPanel p{margin:5px 0;color:#334155;font-size:13px}.receiptActions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.receiptActions .btn{margin:0}.btn.secondary{background:#e2e8f0;color:#17202b}.btn.success{background:#15803d}.btn:disabled{opacity:.45;cursor:not-allowed}.receiptNote{font-size:11px;color:#64748b;margin-top:10px}.formLocked{opacity:.6;pointer-events:none}
+.footer{text-align:center;color:#73808c;font-size:10px;margin-top:15px}
+@media(max-width:560px){.receiptActions{grid-template-columns:1fr}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.card{padding:16px}.head h1{font-size:23px}}
+
+.photoBox{margin:4px 0 16px;padding:14px;border:1px solid #dbe2e8;border-radius:14px;background:#f8fafc}
+.photoPreview{width:150px;height:180px;object-fit:cover;border-radius:12px;border:1px solid #cbd5e1;background:#fff;display:block;margin:0 auto 10px}
+.photoActions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.photoBtn{border:0;border-radius:10px;padding:11px;font-weight:900;cursor:pointer;background:#e2e8f0;color:#17202b}
+.photoStatus{font-size:11px;color:#64748b;margin-top:8px;text-align:center}
+.consent{display:flex;gap:8px;align-items:flex-start;font-size:11px;color:#475569;line-height:1.4;margin-top:10px}
+.consent input{margin-top:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <img class="logo" src="./icon.svg" alt="Empresa">
+    <h1>Inscrição de Candidato à CIPA</h1>
+    <p>NR-5 • formulário individual de candidatura</p>
+  </div>
+  <div class="card">
+    <div class="meta">
+      <b id="term">CIPA — carregando gestão...</b>
+      <span id="company">Conectando ao sistema SST...</span>
+    </div>
+    <form id="form">
+      <div class="field"><label>Nome completo *</label><input id="name" autocomplete="name" required maxlength="120" placeholder="Digite seu nome completo"></div>
+      <div class="grid">
+        <div class="field"><label>Função *</label><input id="role" required maxlength="100" placeholder="Ex.: Operador de produção"></div>
+        <div class="field"><label>Setor *</label><input id="sector" required maxlength="100" placeholder="Ex.: Produção"></div>
+        <div class="field"><label>Turno *</label><select id="shift" required><option value="">Selecione</option><option>A</option><option>B</option><option>C</option><option>E</option></select></div>
+      </div>
+      <div class="field"><label>Matrícula *</label><input id="matricula" required maxlength="40" inputmode="numeric" placeholder="Digite sua matrícula"></div>
+      <div class="field photoBox">
+        <label>Foto do candidato</label>
+        <img id="photoPreview" class="photoPreview" alt="Prévia da foto" src="./icon.svg">
+        <div class="photoActions">
+          <button id="takePhoto" type="button" class="photoBtn">📷 Tirar foto</button>
+          <button id="choosePhoto" type="button" class="photoBtn">🖼️ Escolher foto</button>
+        </div>
+        <input id="photoCamera" type="file" accept="image/*" capture="user" hidden>
+        <input id="photoGallery" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+        <div id="photoStatus" class="photoStatus">A foto ficará pendente de aprovação na Gestão CIPA antes de ser usada no painel dos candidatos.</div>
+        <label id="photoConsentWrap" class="consent" style="display:none"><input id="photoConsent" type="checkbox">Autorizo o uso desta foto exclusivamente para identificação e divulgação interna do processo eleitoral da CIPA.</label>
+      </div>
+      <div class="field signatureBox">
+        <label>Assinatura do candidato *</label>
+        <div id="signatureWrap" class="signatureCanvasWrap"><canvas id="signatureCanvas" aria-label="Área para assinatura"></canvas></div>
+        <div class="signatureActions">
+          <button id="clearSignature" type="button" class="sigBtn sigClear">Limpar assinatura</button>
+          <button id="confirmSignature" type="button" class="sigBtn sigConfirm">Confirmar assinatura</button>
+        </div>
+        <div id="signatureStatus" class="sigStatus">Assine com o dedo no celular ou com o mouse no computador.</div>
+      </div>
+      <button id="submit" class="btn" type="submit">Confirmar minha inscrição</button>
+      <div class="hint">Ao confirmar, o sistema registra a ordem de inscrição e gera automaticamente o número do candidato. Os dados são informados pelo próprio empregado; o sistema não busca nomes de funcionários. Uma mesma matrícula não pode ser inscrita duas vezes na mesma gestão.</div>
+      <div id="msg" class="msg"></div>
+    </form>
+    <div id="receiptPanel" class="receiptPanel">
+      <h2>✅ Inscrição recebida</h2>
+      <p id="receiptSummary"></p>
+      <div class="receiptActions">
+        <button id="previewReceipt" type="button" class="btn secondary">👁 Visualizar comprovante</button>
+        <button id="downloadReceipt" type="button" class="btn">📥 Baixar PDF</button>
+        <button id="newRegistration" type="button" class="btn success" disabled>＋ Nova inscrição</button>
+      </div>
+      <div id="receiptNote" class="receiptNote">Visualize ou baixe o comprovante para liberar uma nova inscrição neste aparelho.</div>
+    </div>
+  </div>
+  <div class="footer">Sistema SST • Gestão CIPA – NR-5</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.12/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.12/vfs_fonts.js"></script>
+<script>
+'use strict';
+const FIREBASE={apiKey:'AIzaSyBFOJOxX59k1dfZbOauv4zjkh_qhynuLuU',authDomain:'app-inspecao-sst-79aa6.firebaseapp.com',projectId:'app-inspecao-sst-79aa6',storageBucket:'app-inspecao-sst-79aa6.firebasestorage.app',messagingSenderId:'992254064215',appId:'1:992254064215:web:ffa5f1c463b444d8479512'};
+const COL='inspections', MGMT='_cipa_management_comercial', LOGO_TBM_URL='./icon.svg';
+let db=null, management=null, signatureData='', signatureConfirmed=false, signatureDirty=false, candidatePhotoData='', lastRegistration=null, receiptActionDone=false;
+const $=id=>document.getElementById(id);
+const escKey=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,80);
+const fmtSeq=n=>String(Math.max(1,+n||1)).padStart(2,'0');
+function show(text,type='err'){const m=$('msg');m.className='msg '+(type==='ok'?'ok':'err');m.innerHTML=text}
+async function compressCandidatePhoto(file){
+  if(!file)return'';
+  if(!/^image\/(jpeg|jpg|png|webp)$/i.test(file.type||''))throw new Error('Use uma foto JPG, PNG ou WEBP.');
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src=url});
+    const maxW=720,maxH=900,scale=Math.min(1,maxW/(img.naturalWidth||img.width),maxH/(img.naturalHeight||img.height));
+    const w=Math.max(1,Math.round((img.naturalWidth||img.width)*scale)),h=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+    let out=canvas.toDataURL('image/jpeg',0.78);
+    if(out.length>850000)out=canvas.toDataURL('image/jpeg',0.62);
+    if(out.length>900000)throw new Error('A foto ficou muito grande. Escolha outra imagem.');
+    return out;
+  }finally{URL.revokeObjectURL(url)}
+}
+function setupCandidatePhoto(){
+  const preview=$('photoPreview'),status=$('photoStatus'),wrap=$('photoConsentWrap');
+  const load=async file=>{
+    if(!file)return;
+    try{
+      status.textContent='Preparando foto...';
+      candidatePhotoData=await compressCandidatePhoto(file);
+      preview.src=candidatePhotoData;
+      wrap.style.display='flex';
+      $('photoConsent').checked=false;
+      status.textContent='Foto pronta. Após a inscrição ficará PENDENTE até aprovação da Gestão CIPA.';
+    }catch(e){candidatePhotoData='';preview.src='./icon.svg';wrap.style.display='none';show(e?.message||'Não foi possível preparar a foto.')}
+  };
+  $('takePhoto').onclick=()=>{$('photoCamera').value='';$('photoCamera').click()};
+  $('choosePhoto').onclick=()=>{$('photoGallery').value='';$('photoGallery').click()};
+  $('photoCamera').onchange=e=>load(e.target.files?.[0]);
+  $('photoGallery').onchange=e=>load(e.target.files?.[0]);
+}
+function setupSignature(){
+  const canvas=$('signatureCanvas'),wrap=$('signatureWrap'),status=$('signatureStatus');
+  if(!canvas||!wrap)return;
+  const ctx=canvas.getContext('2d');
+  let drawing=false,last=null;
+  function resize(){
+    const rect=canvas.getBoundingClientRect();
+    const ratio=Math.max(1,Math.min(2,window.devicePixelRatio||1));
+    const old=signatureData;
+    canvas.width=Math.round(rect.width*ratio);
+    canvas.height=Math.round(180*ratio);
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#111827';ctx.lineWidth=2.2;
+    if(old){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,rect.width,180);img.src=old}
+  }
+  function point(ev){
+    const rect=canvas.getBoundingClientRect();
+    return{x:ev.clientX-rect.left,y:ev.clientY-rect.top};
+  }
+  function startDraw(ev){
+    ev.preventDefault();drawing=true;last=point(ev);signatureDirty=true;signatureConfirmed=false;wrap.classList.remove('confirmed');
+    status.className='sigStatus';status.textContent='Assinatura alterada. Clique em Confirmar assinatura.';
+    try{canvas.setPointerCapture(ev.pointerId)}catch(_){}
+  }
+  function moveDraw(ev){
+    if(!drawing)return;ev.preventDefault();const p=point(ev);
+    ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;
+  }
+  function endDraw(ev){if(!drawing)return;ev.preventDefault();drawing=false;last=null}
+  canvas.addEventListener('pointerdown',startDraw);
+  canvas.addEventListener('pointermove',moveDraw);
+  canvas.addEventListener('pointerup',endDraw);
+  canvas.addEventListener('pointercancel',endDraw);
+  $('clearSignature').onclick=()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    signatureData='';signatureConfirmed=false;signatureDirty=false;wrap.classList.remove('confirmed');
+    status.className='sigStatus';status.textContent='Assine com o dedo no celular ou com o mouse no computador.';
+  };
+  $('confirmSignature').onclick=()=>{
+    if(!signatureDirty){show('Faça sua assinatura antes de confirmar.');return}
+    signatureData=canvas.toDataURL('image/png');
+    signatureConfirmed=true;wrap.classList.add('confirmed');
+    status.className='sigStatus ok';status.textContent='✓ Assinatura confirmada.';
+  };
+  window.addEventListener('resize',()=>setTimeout(resize,100),{passive:true});
+  resize();
+}
+function formatDateTime(value){
+  const d=new Date(value||'');if(isNaN(d))return'—';
+  return d.toLocaleString('pt-BR',{timeZone:'America/Cuiaba',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function formatDate(value){
+  if(!value)return'—';
+  const m=String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m)return m[3]+'/'+m[2]+'/'+m[1];
+  const d=new Date(value);return isNaN(d)?'—':d.toLocaleDateString('pt-BR',{timeZone:'America/Cuiaba'});
+}
+async function logoBase64(){
+  async function toBase64(url){
+    const r=await fetch(url,{cache:'force-cache'});if(!r.ok)throw new Error('Logo indisponível');
+    const b=await r.blob();
+    return await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=reject;fr.readAsDataURL(b)});
+  }
+  async function transparent(base64){
+    try{
+      const img=await new Promise((resolve,reject)=>{const x=new Image();x.onload=()=>resolve(x);x.onerror=reject;x.src=base64});
+      const cv=document.createElement('canvas');cv.width=img.naturalWidth||img.width;cv.height=img.naturalHeight||img.height;
+      const ctx=cv.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);
+      const d=ctx.getImageData(0,0,cv.width,cv.height),p=d.data;
+      for(let i=0;i<p.length;i+=4){
+        const r=p[i],g=p[i+1],b=p[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+        if((r>=238&&g>=238&&b>=238)||(mx>=232&&(mx-mn)<=18)||(r>=225&&g>=232&&b>=236&&(b-r)<=28)){
+          const a=Math.max(0,Math.min(255,(255-Math.min(r,g,b))*10));p[i+3]=a<36?0:a;
+        }
+      }
+      ctx.putImageData(d,0,0);return cv.toDataURL('image/png');
+    }catch(_){return base64}
+  }
+  try{return await transparent(await toBase64(LOGO_TBM_URL))}
+  catch(_){try{return await transparent(await toBase64('./icon.svg'))}catch(__){return''}}
+}
+function receiptFilename(reg){
+  const nm=String(reg.name||'candidato').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+  return 'CIPA_'+String(reg.term||'gestao').replace('/','-')+'_Comprovante_'+fmtSeq(reg.seq)+'_'+nm+'.pdf';
+}
+async function buildReceiptDoc(reg){
+  const logo=await logoBase64();
+  const company=management?.company||'EMPRESA CADASTRADA';
+  const unit=management?.unit||'';
+  const address=management?.address||'ENDEREÇO CADASTRADO';
+  const cnpj=management?.cnpj||'';
+  const election=management?.electionDate?formatDate(management.electionDate):'A DEFINIR';
+  return {
+    pageSize:'A4',
+    pageMargins:[56,88,56,82],
+    defaultStyle:{font:'Roboto',fontSize:11,color:'#111827',lineHeight:1.35},
+    header:()=>({margin:[56,12,56,0],columns:[
+      logo?{image:logo,width:128,fit:[128,58]}:{text:'SST',bold:true,fontSize:18,width:128},
+      {text:'',width:'*'}
+    ]}),
+    footer:(currentPage,pageCount)=>({margin:[56,0,56,18],stack:[
+      {text:String(company).toUpperCase(),bold:true,alignment:'center',fontSize:7.4},
+      {text:address,alignment:'center',fontSize:7.2},
+      {text:'CNPJ – '+cnpj+' • Página '+currentPage+' de '+pageCount,alignment:'center',fontSize:7.2}
+    ]}),
+    content:[
+      {text:'CIPA — GESTÃO '+reg.term,alignment:'center',bold:true,fontSize:11,margin:[0,4,0,10]},
+      {text:'COMPROVANTE DE INSCRIÇÃO À ELEIÇÃO DA CIPA',alignment:'center',bold:true,fontSize:15,decoration:'underline',margin:[0,6,0,24]},
+      {text:'INSCRIÇÃO Nº '+fmtSeq(reg.seq),alignment:'center',bold:true,fontSize:22,color:'#0f766e',margin:[0,0,0,20]},
+      {table:{dontBreakRows:true,widths:[145,'*'],body:[
+        [{text:'Nome completo',bold:true},reg.name],
+        [{text:'Função',bold:true},reg.role],
+        [{text:'Setor',bold:true},reg.sector],
+        [{text:'Turno',bold:true},reg.shift],
+        [{text:'Matrícula',bold:true},reg.matricula],
+        [{text:'Data/hora da inscrição',bold:true},formatDateTime(reg.registeredAtIso)],
+        [{text:'Data da eleição',bold:true},election]
+      ]},layout:'lightHorizontalLines',margin:[0,0,0,22]},
+      {text:'A '+company+', '+unit+', certifica o recebimento da inscrição acima para candidatura à Comissão Interna de Prevenção de Acidentes e de Assédio – CIPA, gestão '+reg.term+'.',alignment:'justify',margin:[0,0,0,24]},
+      {text:'ASSINATURA DO CANDIDATO',alignment:'center',bold:true,fontSize:10,margin:[0,4,0,8]},
+      reg.signatureData?{image:reg.signatureData,width:240,height:92,fit:[240,92],alignment:'center',margin:[0,0,0,5]}:{text:'\n\n_______________________________',alignment:'center'},
+      {text:reg.name,alignment:'center',bold:true,fontSize:9.5,margin:[0,0,0,20]},
+      {text:'Rondonópolis, '+formatDate(reg.registeredAtIso)+'.',alignment:'right',margin:[0,14,0,0]}
+    ]
+  };
+}
+function markReceiptAction(){
+  receiptActionDone=true;
+  const b=$('newRegistration');if(b)b.disabled=false;
+  const n=$('receiptNote');if(n)n.textContent='Comprovante liberado. Você já pode iniciar uma nova inscrição.';
+}
+async function previewReceiptPdf(){
+  if(!lastRegistration)return;
+  const win=window.open('about:blank','_blank');
+  try{
+    const doc=await buildReceiptDoc(lastRegistration);
+    if(!window.pdfMake?.createPdf)throw new Error('Gerador de PDF indisponível.');
+    window.pdfMake.createPdf(doc).getBlob(blob=>{
+      const u=URL.createObjectURL(blob);
+      if(win){win.location=u;setTimeout(()=>URL.revokeObjectURL(u),300000)}
+      else window.pdfMake.createPdf(doc).download(receiptFilename(lastRegistration));
+      markReceiptAction();
+    });
+  }catch(e){if(win)win.close();console.error(e);show('Não foi possível visualizar o comprovante. Tente baixar o PDF.')}
+}
+async function downloadReceiptPdf(){
+  if(!lastRegistration)return;
+  try{
+    const doc=await buildReceiptDoc(lastRegistration);
+    if(!window.pdfMake?.createPdf)throw new Error('Gerador de PDF indisponível.');
+    window.pdfMake.createPdf(doc).download(receiptFilename(lastRegistration));
+    markReceiptAction();
+  }catch(e){console.error(e);show('Não foi possível baixar o comprovante agora.')}
+}
+function lockRegistrationForm(){
+  $('form').classList.add('formLocked');
+  $('form').querySelectorAll('input,select,button').forEach(el=>el.disabled=true);
+}
+function showReceiptPanel(reg){
+  lockRegistrationForm();
+  $('receiptSummary').innerHTML='<b>Inscrição nº '+fmtSeq(reg.seq)+'</b> — '+reg.name+'<br>Matrícula '+reg.matricula+' • Turno '+reg.shift;
+  $('receiptPanel').classList.add('on');
+  $('previewReceipt').onclick=previewReceiptPdf;
+  $('downloadReceipt').onclick=downloadReceiptPdf;
+  $('newRegistration').disabled=true;
+  $('newRegistration').onclick=()=>{if(receiptActionDone)window.location.reload()};
+  $('receiptPanel').scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function start(){
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FIREBASE);
+    const auth=firebase.auth();
+    if(!auth.currentUser)await auth.signInAnonymously();
+    db=firebase.firestore();
+    const snap=await db.collection(COL).doc(MGMT).get();
+    management=snap.exists?(snap.data()?.payload||{}):{};
+    const term=management.nextTerm||'Gestão atual';
+    if(management?.isArchived||management?.stageLocks?.registration){
+      $('submit').disabled=true;
+      $('form').querySelectorAll('input,select,button').forEach(el=>el.disabled=true);
+      show('As inscrições para esta gestão da CIPA estão encerradas. Procure a Comissão Eleitoral para orientações.');
+    }
+    $('term').textContent='CIPA '+term;
+    $('company').textContent=[management.company,management.unit].filter(Boolean).join(' • ')||'Empresa não configurada';
+    setupCandidatePhoto();
+    setupSignature();
+  }catch(e){
+    console.error(e);
+    show('Não foi possível conectar ao sistema de inscrições. Verifique sua internet e tente novamente.');
+    $('submit').disabled=true;
+  }
+}
+$('form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!db){show('A conexão ainda não está disponível. Atualize a página e tente novamente.');return}
+  const name=$('name').value.trim();
+  const role=$('role').value.trim();
+  const sector=$('sector').value.trim();
+  const shift=$('shift').value.trim();
+  const matricula=$('matricula').value.trim();
+  if(!name||!role||!sector||!shift||!matricula){show('Preencha Nome, Função, Setor, Turno e Matrícula.');return}
+  if(candidatePhotoData&&!$('photoConsent').checked){show('Para enviar a foto, confirme a autorização de uso da imagem para o processo eleitoral da CIPA.');return}
+  if(!signatureConfirmed||!signatureData){show('Assine e clique em Confirmar assinatura antes de concluir a inscrição.');return}
+  const term=String(management?.nextTerm||new Date().getFullYear()+'/'+(new Date().getFullYear()+1));
+  const termKey=escKey(term)||'gestao';
+  const matKey=escKey(matricula);
+  const nameKey=escKey(name);
+  if(!matKey){show('Informe uma matrícula válida.');return}
+  if(!nameKey){show('Informe um nome completo válido.');return}
+  const candidateRef=db.collection(COL).doc('_cipa_candidate_'+termKey+'_'+matKey);
+  const nameLockRef=db.collection(COL).doc('_cipa_candidate_name_'+termKey+'_'+nameKey);
+  const counterRef=db.collection(COL).doc('_cipa_candidate_counter_'+termKey);
+  const managementRef=db.collection(COL).doc(MGMT);
+  $('submit').disabled=true;$('submit').textContent='Registrando inscrição...';
+  const registeredAtIso=new Date().toISOString();
+  try{
+    const legacySnap=await db.collection(COL).where('kind','==','cipa-candidate').get();
+    const duplicateLegacy=legacySnap.docs.some(doc=>{
+      const d=doc.data()||{};
+      return String(d.term||'')===term && escKey(d.name||'')===nameKey;
+    });
+    if(duplicateLegacy){
+      const err=new Error('DUPLICATE_NAME');err.code='DUPLICATE_NAME';throw err;
+    }
+    const seq=await db.runTransaction(async tx=>{
+      const cand=await tx.get(candidateRef);
+      const nameLock=await tx.get(nameLockRef);
+      const counter=await tx.get(counterRef);
+      const mg=await tx.get(managementRef);
+      if(cand.exists){const err=new Error('DUPLICATE_MATRICULA');err.code='DUPLICATE_MATRICULA';throw err}
+      if(nameLock.exists){const err=new Error('DUPLICATE_NAME');err.code='DUPLICATE_NAME';throw err}
+      const payload=mg.exists?(mg.data()?.payload||{}):{};
+      if(payload?.isArchived||payload?.stageLocks?.registration){
+        const err=new Error('REGISTRATION_CLOSED');err.code='REGISTRATION_CLOSED';throw err;
+      }
+      const sameName=(Array.isArray(payload.candidates)?payload.candidates:[]).some(c=>escKey(c?.name||'')===nameKey);
+      if(sameName){const err=new Error('DUPLICATE_NAME');err.code='DUPLICATE_NAME';throw err}
+      const maxSaved=(Array.isArray(payload.candidates)?payload.candidates:[]).reduce((m,c)=>Math.max(m,+c.seq||0),0);
+      const current=Math.max(+counter.data()?.count||0,maxSaved);
+      const next=current+1;
+      tx.set(counterRef,{kind:'cipa-candidate-counter',term,count:next,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      tx.set(nameLockRef,{kind:'cipa-candidate-name-lock',term,name,nameKey,matricula,candidateDocId:candidateRef.id,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+      tx.set(candidateRef,{
+        kind:'cipa-candidate',term,seq:next,name,nameKey,role,sector,shift,matricula,signatureData,
+        signatureConfirmed:true,status:'Recebida',cancelledAt:'',registeredAtIso,
+        photoData:candidatePhotoData||'',photoStatus:candidatePhotoData?'pending':'none',
+        photoConsent:!!(candidatePhotoData&&$('photoConsent').checked),photoReviewedAt:'',
+        registeredAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return next;
+    });
+    lastRegistration={seq,name,role,sector,shift,matricula,signatureData,photoData:candidatePhotoData,photoStatus:candidatePhotoData?'pending':'none',term,registeredAtIso};
+    receiptActionDone=false;
+    show('✅ Inscrição realizada com sucesso.<span class="number">Nº '+fmtSeq(seq)+'</span>Sua inscrição foi recebida e sincronizada com a Gestão CIPA.','ok');
+    showReceiptPanel(lastRegistration);
+  }catch(e2){
+    console.error(e2);
+    if(e2?.code==='DUPLICATE_NAME'||String(e2?.message||'').includes('DUPLICATE_NAME'))show('Este nome já possui candidatura registrada nesta gestão da CIPA. Cada pessoa pode se candidatar somente uma vez.');
+    else if(e2?.code==='DUPLICATE_MATRICULA'||String(e2?.message||'').includes('DUPLICATE_MATRICULA'))show('Esta matrícula já possui candidatura registrada nesta gestão da CIPA. Cada pessoa pode se candidatar somente uma vez.');
+    else if(e2?.code==='REGISTRATION_CLOSED'||String(e2?.message||'').includes('REGISTRATION_CLOSED')){
+      show('As inscrições foram encerradas pela Gestão CIPA. Nenhuma nova candidatura pode ser registrada.');
+      $('form').querySelectorAll('input,select,button').forEach(el=>el.disabled=true);
+    } else show('Não foi possível concluir a inscrição agora. Verifique sua conexão e tente novamente.');
+    $('submit').disabled=false;$('submit').textContent='Confirmar minha inscrição';
+  }
+});
+start();
+</script>
+</body>
+</html>
