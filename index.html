@@ -102,8 +102,51 @@ $('loginBtn').onclick=async()=>{
     if(result.error)throw new Error('Login ou senha incorretos.');
     if(!result.data?.session)throw new Error('Não foi possível iniciar a sessão.');
 
-    // Entrega explícita da sessão para o app. Isso evita travas em WebViews
-    // e navegadores móveis que demoram para restaurar o storage do Supabase.
+    // Já carrega empresa + licença AQUI, enquanto o login está autenticado.
+    // O app recebe o contexto pronto e abre imediatamente, sem "Carregando empresa".
+    let bootstrap=null;
+    try{
+      const uid=result.data.user.id;
+      const accessResult=await Promise.race([
+        sb.from('sst_access_accounts')
+          .select('user_id,company_id,active')
+          .eq('user_id',uid)
+          .eq('active',true)
+          .limit(1)
+          .maybeSingle(),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('context_timeout')),7000))
+      ]);
+      const access=accessResult?.data||null;
+      if(access?.company_id){
+        const [companyResult,licenseResult,memberResult]=await Promise.all([
+          sb.from('companies').select('*').eq('id',access.company_id).limit(1).maybeSingle(),
+          sb.from('licenses').select('*').eq('company_id',access.company_id).limit(1).maybeSingle(),
+          sb.from('company_members').select('*')
+            .eq('user_id',uid)
+            .eq('company_id',access.company_id)
+            .eq('active',true)
+            .limit(1)
+            .maybeSingle()
+        ]);
+        if(companyResult?.data){
+          bootstrap={
+            user:{id:uid},
+            company:companyResult.data,
+            license:licenseResult?.data||null,
+            membership:memberResult?.data||{
+              user_id:uid,
+              company_id:access.company_id,
+              member_role:'owner',
+              active:true
+            },
+            created_at:Date.now()
+          };
+        }
+      }
+    }catch(e){
+      console.warn('[SST BOOTSTRAP LOGIN]',e);
+    }
+
     try{
       sessionStorage.setItem('sst_runtime_access_token',result.data.session.access_token);
       sessionStorage.setItem('sst_runtime_refresh_token',result.data.session.refresh_token);
@@ -113,11 +156,16 @@ $('loginBtn').onclick=async()=>{
         refresh_token:result.data.session.refresh_token,
         created_at:Date.now()
       }));
+      if(bootstrap){
+        const raw=JSON.stringify(bootstrap);
+        sessionStorage.setItem('sst_bootstrap_context_v1',raw);
+        try{localStorage.setItem('sst_bootstrap_context_v1',raw)}catch{}
+      }
     }catch{}
 
     say('Acesso liberado. Abrindo o sistema...','ok');
     await clearOldCache();
-    location.replace('./app.html?access=ok&v=mobileauth05');
+    location.replace('./app.html?access=ok&v=directopen01');
   }catch(e){
     busy(false);
     const t=String(e?.message||e||'Não foi possível entrar.');
