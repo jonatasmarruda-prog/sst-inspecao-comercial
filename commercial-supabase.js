@@ -6,8 +6,34 @@ if(!cfg.supabaseUrl||!cfg.publishableKey||!window.supabase?.createClient){
   window.SSTCommercialCloud={configured:false,error:'auth_unavailable'};
   return;
 }
-const sb=window.supabase.createClient(cfg.supabaseUrl,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+let runtimeAccessToken='';
+let runtimeRefreshToken='';
+try{
+  runtimeAccessToken=sessionStorage.getItem('sst_runtime_access_token')||'';
+  runtimeRefreshToken=sessionStorage.getItem('sst_runtime_refresh_token')||'';
+}catch{}
+
+const authSb=window.supabase.createClient(cfg.supabaseUrl,cfg.publishableKey,{
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+});
+
+const sb=window.supabase.createClient(cfg.supabaseUrl,cfg.publishableKey,{
+  accessToken:async()=>runtimeAccessToken||null,
+  auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+});
+
 let ctx={user:null,company:null,license:null,membership:null};
+
+function setRuntimeTokens(accessToken='',refreshToken=''){
+  runtimeAccessToken=String(accessToken||'');
+  runtimeRefreshToken=String(refreshToken||runtimeRefreshToken||'');
+  try{
+    if(runtimeAccessToken)sessionStorage.setItem('sst_runtime_access_token',runtimeAccessToken);
+    else sessionStorage.removeItem('sst_runtime_access_token');
+    if(runtimeRefreshToken)sessionStorage.setItem('sst_runtime_refresh_token',runtimeRefreshToken);
+    else sessionStorage.removeItem('sst_runtime_refresh_token');
+  }catch{}
+}
 
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function nowIso(){return new Date().toISOString()}
@@ -18,7 +44,22 @@ function activeLicense(l){
   return false;
 }
 async function getUser(){
-  const {data,error}=await sb.auth.getUser();
+  if(ctx?.user?.id)return clone(ctx.user);
+
+  // Com token direto, a própria RLS identifica o usuário autenticado.
+  // Não depende de auth.getSession()/localStorage do navegador.
+  if(runtimeAccessToken){
+    const {data:access,error}=await sb
+      .from('sst_access_accounts')
+      .select('user_id,company_id,active')
+      .eq('active',true)
+      .limit(1)
+      .maybeSingle();
+    if(error)throw error;
+    if(access?.user_id)return {id:access.user_id};
+  }
+
+  const {data,error}=await authSb.auth.getUser();
   if(error){
     const code=String(error.code||'').toLowerCase(),msg=String(error.message||'').toLowerCase();
     if(code==='session_not_found'||code==='auth_session_missing'||/session.*missing/.test(msg))return null;
@@ -27,23 +68,22 @@ async function getUser(){
   return data?.user||null;
 }
 async function loadContext(){
-  const user=await getUser();
-  if(!user){
-    ctx={user:null,company:null,license:null,membership:null};
-    return clone(ctx);
-  }
-
-  // O Login comercial é a fonte principal do vínculo com a empresa.
-  // Isso evita travas quando existir cadastro antigo/duplicado em company_members.
+  // Primeiro lê o vínculo diretamente com RLS usando o token atual.
+  // Isso funciona mesmo quando o navegador móvel não restaura a sessão Auth.
   const {data:access,error:aErr}=await sb
     .from('sst_access_accounts')
-    .select('company_id,active')
-    .eq('user_id',user.id)
+    .select('user_id,company_id,active')
     .eq('active',true)
     .limit(1)
     .maybeSingle();
   if(aErr)throw aErr;
 
+  if(!access?.user_id||!access?.company_id){
+    ctx={user:null,company:null,license:null,membership:null};
+    return clone(ctx);
+  }
+
+  const user={id:access.user_id};
   let membership=null;
   let companyId=access?.company_id||null;
 
@@ -99,24 +139,25 @@ async function signUp(email,password,fullName=''){
 async function resendSignup(){throw new Error('Confirmação por e-mail não é necessária neste sistema.');}
 async function signIn(email,password){
   const normalized=String(email||'').trim().toLowerCase();
-  const {data,error}=await sb.auth.signInWithPassword({email:normalized,password});
+  const {data,error}=await authSb.auth.signInWithPassword({email:normalized,password});
   if(error)throw error;
   if(!data?.session||!data?.user)throw new Error('Não foi possível iniciar a sessão.');
+  setRuntimeTokens(data.session.access_token,data.session.refresh_token);
   const p=await sb.from('profiles').upsert({user_id:data.user.id,full_name:data.user.user_metadata?.full_name||'',email:data.user.email||normalized,updated_at:nowIso()},{onConflict:'user_id'});
   if(p.error)throw p.error;
   await loadContext();
   return data;
 }
 async function signOut(){
-  const {error}=await sb.auth.signOut({scope:'local'});
-  if(error)throw error;
+  setRuntimeTokens('','');
+  try{await authSb.auth.signOut({scope:'local'})}catch{}
   ctx={user:null,company:null,license:null,membership:null};
   window.SST_COMMERCIAL_CONTEXT=clone(ctx);
 }
 async function resetPassword(email){
   const normalized=String(email||'').trim().toLowerCase();
   const redirectTo=new URL('./commercial-reset.html',location.href).href;
-  const {error}=await sb.auth.resetPasswordForEmail(normalized,{redirectTo});
+  const {error}=await authSb.auth.resetPasswordForEmail(normalized,{redirectTo});
   if(error)throw error;
   return true;
 }
@@ -284,7 +325,8 @@ async function installCompatibility(){
 }
 
 window.SSTCommercialCloud={
-  configured:true,sb,activeLicense,loadContext,getContext:()=>clone(ctx),
+  configured:true,sb,authSb,activeLicense,loadContext,getContext:()=>clone(ctx),
+  setRuntimeTokens,getRuntimeAccessToken:()=>runtimeAccessToken,
   signUp,resendSignup,signIn,signOut,resetPassword,
   createCompany,updateCompany,uploadLogo,logoDataUrl,
   listResponsibles,saveResponsible,deleteResponsible,
