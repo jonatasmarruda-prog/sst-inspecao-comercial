@@ -333,28 +333,8 @@ if('serviceWorker' in navigator){
     }catch(e){console.warn('Limpeza de cache SST',e)}
   });
 }
-</script><script src="./integracao-modulos.js?v=20261014-identity"></script><script src="./cipa-ata-module.js?v=20261014-contrast02"></script><script src="./cipa-management-module.js?v=20261014-cipa12"></script><script>
-(function(){
-  const EXPECTED='2026.10.14.12', KEY='tbm_cipa_force_'+EXPECTED;
-  setTimeout(async()=>{
-    try{
-      if(window.__tbmCipaManagementVersion===EXPECTED)return;
-      if(sessionStorage.getItem(KEY))return;
-      sessionStorage.setItem(KEY,'1');
-      if('caches' in window){
-        const ks=await caches.keys();
-        await Promise.all(ks.filter(k=>k.startsWith('inspecao-sst-')).map(k=>caches.delete(k)));
-      }
-      if('serviceWorker' in navigator){
-        const regs=await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r=>r.update().catch(()=>{})));
-      }
-      const u=new URL(location.href);u.searchParams.set('_cipa','12');location.replace(u.toString());
-    }catch(e){console.warn('[CIPA VERSION GUARD]',e)}
-  },1400);
-})();
-</script><script src="./brigadistas-control-module.js?v=20261014-brig04"></script><script src="./extintores-control-module.js?v=20261014-ext25"></script><script src="./sst-repair-loader.js?v=mobile-nofreeze01"></script><script src="./delete-draft.js?v=20260904-01"></script><script src="./sst-resilience-guard.js?v=20261014-01"></script><script src="./system-safety-module.js?v=20261014-sec03"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="./commercial-env.js?v=auth04"></script><script src="./commercial-supabase.js?v=directopen03"></script><script src="./commercial-license-gate.js?v=auth04"></script><script src="./commercial-client-auth.js?v=directopen03"></script><script src="./commercial-company-settings.js?v=companyfast01"></script><script id="commercial-tile-open-fix">
+</script><script src="./integracao-modulos.js?v=20261014-identity"></script><script src="./delete-draft.js?v=20260904-01"></script><script src="./sst-resilience-guard.js?v=20261014-01"></script>
+<script src="./commercial-lazy-modules.js?v=lazy01"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="./commercial-env.js?v=auth04"></script><script src="./commercial-supabase.js?v=directopen03"></script><script src="./commercial-license-gate.js?v=auth04"></script><script src="./commercial-client-auth.js?v=directopen03"></script><script src="./commercial-company-settings.js?v=companyfast01"></script><script id="commercial-tile-open-fix">
 (function(){
   function bind(){
     document.querySelectorAll('#home .tile[data-type]').forEach(function(btn){
