@@ -165,7 +165,7 @@ $('loginBtn').onclick=async()=>{
 
     say('Acesso liberado. Abrindo o sistema...','ok');
     await clearOldCache();
-    location.replace('./app.html?access=ok&v=corefix01');
+    location.replace('./app.html?access=ok&v=corefix02');
   }catch(e){
     busy(false);
     const t=String(e?.message||e||'Não foi possível entrar.');
