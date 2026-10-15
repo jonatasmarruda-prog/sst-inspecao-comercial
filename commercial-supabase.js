@@ -24,9 +24,9 @@ const sb=window.supabase.createClient(cfg.supabaseUrl,cfg.publishableKey,{
 
 let ctx={user:null,company:null,license:null,membership:null};
 
-function setRuntimeTokens(accessToken='',refreshToken=''){
+function setRuntimeTokens(accessToken='',refreshToken){
   runtimeAccessToken=String(accessToken||'');
-  runtimeRefreshToken=String(refreshToken||runtimeRefreshToken||'');
+  if(arguments.length>1)runtimeRefreshToken=String(refreshToken||'');
   try{
     if(runtimeAccessToken)sessionStorage.setItem('sst_runtime_access_token',runtimeAccessToken);
     else sessionStorage.removeItem('sst_runtime_access_token');
@@ -35,6 +35,18 @@ function setRuntimeTokens(accessToken='',refreshToken=''){
   }catch{}
 }
 
+function bootstrapContext(value){
+  if(!value?.user?.id||!value?.company?.id)return false;
+  ctx={
+    user:value.user,
+    company:value.company,
+    license:value.license||null,
+    membership:value.membership||null
+  };
+  window.SST_COMMERCIAL_CONTEXT=clone(ctx);
+  document.dispatchEvent(new CustomEvent('sst-commercial-context',{detail:clone(ctx)}));
+  return true;
+}
 function clone(x){return JSON.parse(JSON.stringify(x))}
 function nowIso(){return new Date().toISOString()}
 function activeLicense(l){
@@ -150,6 +162,8 @@ async function signIn(email,password){
 }
 async function signOut(){
   setRuntimeTokens('','');
+  try{sessionStorage.removeItem('sst_bootstrap_context_v1')}catch{}
+  try{localStorage.removeItem('sst_bootstrap_context_v1')}catch{}
   try{await authSb.auth.signOut({scope:'local'})}catch{}
   ctx={user:null,company:null,license:null,membership:null};
   window.SST_COMMERCIAL_CONTEXT=clone(ctx);
@@ -327,6 +341,7 @@ async function installCompatibility(){
 window.SSTCommercialCloud={
   configured:true,sb,authSb,activeLicense,loadContext,getContext:()=>clone(ctx),
   setRuntimeTokens,getRuntimeAccessToken:()=>runtimeAccessToken,getRuntimeRefreshToken:()=>runtimeRefreshToken,
+  bootstrapContext,
   signUp,resendSignup,signIn,signOut,resetPassword,
   createCompany,updateCompany,uploadLogo,logoDataUrl,
   listResponsibles,saveResponsible,deleteResponsible,
