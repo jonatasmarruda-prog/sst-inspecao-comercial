@@ -61,6 +61,34 @@ function withTimeout(promise,ms,label){
     new Promise((_,reject)=>setTimeout(()=>reject(new Error(label||'Tempo de carregamento excedido.')),ms))
   ]);
 }
+function waitForInitialSession(api,ms=8000){
+  return new Promise((resolve,reject)=>{
+    let finished=false;
+    let subscription=null;
+    const timer=setTimeout(()=>{
+      if(finished)return;
+      finished=true;
+      try{subscription?.unsubscribe?.()}catch{}
+      reject(new Error('Não foi possível carregar a sessão neste navegador.'));
+    },ms);
+
+    const result=api.sb.auth.onAuthStateChange((event,session)=>{
+      if(finished)return;
+      if(event==='INITIAL_SESSION'||event==='SIGNED_IN'||event==='TOKEN_REFRESHED'){
+        finished=true;
+        clearTimeout(timer);
+        setTimeout(()=>{try{subscription?.unsubscribe?.()}catch{}},0);
+        resolve(session||null);
+      }else if(event==='SIGNED_OUT'){
+        finished=true;
+        clearTimeout(timer);
+        setTimeout(()=>{try{subscription?.unsubscribe?.()}catch{}},0);
+        resolve(null);
+      }
+    });
+    subscription=result?.data?.subscription||null;
+  });
+}
 function showError(message){
   const r=gate();
   $('#scaSpin',r).classList.add('hidden');
@@ -105,14 +133,11 @@ async function ready(force=false){
     return;
   }
   try{
-    const sessionResult=await withTimeout(api.sb.auth.getSession(),8000,'Não foi possível validar sua sessão.');
-    if(sessionResult.error)throw sessionResult.error;
-    if(!sessionResult.data?.session){
-      location.replace('./');
+    const session=await waitForInitialSession(api,8000);
+    if(!session){
+      location.replace('./?v=mobileauth03');
       return;
     }
-
-    const session=sessionResult.data.session;
     const accessCheck=await withTimeout(
       api.sb.from('sst_access_accounts').select('id,active,company_id').eq('user_id',session.user.id).eq('active',true).limit(1).maybeSingle(),
       8000,
@@ -150,11 +175,13 @@ function bind(){
   const api=window.SSTCommercialCloud;
   if(!api?.configured||authSubscription)return;
   const result=api.sb.auth.onAuthStateChange((event,session)=>{
-    if(event==='SIGNED_OUT'||!session){
-      location.replace('./');
+    if(event==='SIGNED_OUT'){
+      location.replace('./?v=mobileauth03');
       return;
     }
-    if(event==='TOKEN_REFRESHED'&&gate().classList.contains('hidden'))return;
+    if(event==='TOKEN_REFRESHED'&&authenticated)return;
+    if(event==='SIGNED_IN'&&authenticated)return;
+    // INITIAL_SESSION é tratado por ready(); não redirecionar aqui.
   });
   authSubscription=result?.data?.subscription||true;
 }
