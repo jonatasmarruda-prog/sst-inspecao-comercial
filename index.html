@@ -104,7 +104,7 @@ $('loginBtn').onclick=async()=>{
 
     say('Acesso liberado. Abrindo o sistema...','ok');
     await clearOldCache();
-    location.href='./app.html?access=ok&v=20261015-login02';
+    location.href='./app.html?access=ok&v=mobileauth03';
   }catch(e){
     busy(false);
     const t=String(e?.message||e||'Não foi possível entrar.');
