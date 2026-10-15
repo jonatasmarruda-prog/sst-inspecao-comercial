@@ -7,7 +7,8 @@ const loaded=new Map();
 function script(src){
   if(loaded.has(src))return loaded.get(src);
   const p=new Promise((resolve,reject)=>{
-    const existing=[...document.scripts].find(s=>s.src&&s.src.includes('/'+src));
+    const absolute=/^https?:\/\//i.test(src);
+    const existing=[...document.scripts].find(s=>s.src&&(absolute?s.src===src:s.src.includes('/'+src)));
     if(existing){
       if(existing.dataset.lazyReady==='1')return resolve(true);
       existing.addEventListener('load',()=>resolve(true),{once:true});
@@ -15,7 +16,7 @@ function script(src){
       return;
     }
     const s=document.createElement('script');
-    s.src='./'+src+'?lazy=1&v=20261015';
+    s.src=absolute?src:('./'+src+'?lazy=1&v=20261015');
     s.async=true;
     s.onload=()=>{s.dataset.lazyReady='1';resolve(true)};
     s.onerror=()=>reject(new Error('Falha ao carregar '+src));
@@ -83,6 +84,14 @@ async function openExt(){
   return loadAndClick('extintores-control-module.js','tbmExtTile');
 }
 async function openSecurity(){return loadAndClick('system-safety-module.js','tbmSystemSecurityTile')}
+async function openEmployees(){
+  await script('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+  await script('commercial-employees.js');
+  await new Promise(r=>setTimeout(r,20));
+  if(typeof window.SSTEmployees?.open==='function')return window.SSTEmployees.open();
+  const b=document.getElementById('seOpenEmployees');if(b)return b.click();
+  throw new Error('Funcionários não inicializou');
+}
 async function openPT(){
   await script('pt-altura.js');
   script('pt-contrast-fix.js').catch(()=>{});
@@ -90,6 +99,28 @@ async function openPT(){
   await new Promise(r=>setTimeout(r,20));
   if(typeof window.openPTAltura==='function')return window.openPTAltura();
   throw new Error('PT não inicializou');
+}
+function ensureWordActivation(){
+  if(document.getElementById('lazyWordAttachments'))return;
+  const photo=document.getElementById('photoInput')?.closest('.card');
+  if(!photo)return;
+  const b=document.createElement('button');
+  b.id='lazyWordAttachments';
+  b.type='button';
+  b.className='btn secondary full no-print';
+  b.textContent='📎 Ativar anexos Word';
+  b.onclick=async()=>{
+    if(b.disabled)return;
+    b.disabled=true;b.textContent='⏳ Carregando anexos...';
+    try{
+      await script('commercial-word-attachments.js');
+      b.remove();
+    }catch(e){
+      b.disabled=false;b.textContent='📎 Ativar anexos Word';
+      alert('Não foi possível carregar os anexos Word.');
+    }
+  };
+  photo.appendChild(b);
 }
 function install(){
   make('lazyCipa','general','🗳️','Gestão CIPA – NR-5','Eleição, atas, calendário e PDFs',openCipa);
@@ -99,8 +130,13 @@ function install(){
   make('lazyExt','fire','🧯','Controle de Extintores','Recargas, vencimentos e testes',openExt);
   make('lazyPT','machine','🪜','Permissão de Trabalho (PT)','NR 35 • Escadas, Andaimes e PTA',openPT);
   make('lazySecurity','safety','🛡️','Segurança do Sistema','Backup, alterações e sincronização',openSecurity);
+  make('lazyEmployees','general','👥','Funcionários','Cadastro e importação da equipe',openEmployees);
+  ensureWordActivation();
   window.__sstCommercialLazyReady=true;
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 setTimeout(install,400);
+document.addEventListener('click',e=>{
+  if(e.target.closest?.('#home .tile[data-type]'))setTimeout(ensureWordActivation,120);
+},{passive:true});
 })();
