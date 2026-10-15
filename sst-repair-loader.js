@@ -93,46 +93,58 @@ function loadSolidStatusBadges(){const old=document.getElementById('tbm-solid-st
 function loadAccidentInjuryModule(){const old=document.getElementById('tbm-accident-injury-module');if(old)old.remove();const s=document.createElement('script');s.id='tbm-accident-injury-module';s.src='./accident-injury-module.js?v=20260904-01&cb='+Date.now();s.async=false;document.body.appendChild(s);return new Promise(resolve=>{s.onload=resolve;s.onerror=resolve})}
 function loadAccidentDiagnosisConditional(){const old=document.getElementById('tbm-accident-diagnosis-conditional');if(old)old.remove();const s=document.createElement('script');s.id='tbm-accident-diagnosis-conditional';s.src='./accident-diagnosis-conditional.js?v=20260904-01&cb='+Date.now();s.async=false;document.body.appendChild(s);return new Promise(resolve=>{s.onload=resolve;s.onerror=resolve})}
 
+const yieldUI=(ms=70)=>new Promise(resolve=>setTimeout(resolve,ms));
+async function repairStep(fn,name){
+  await yieldUI();
+  try{return await fn()}catch(e){console.warn('[SST REPAIR '+name+']',e);return null}
+}
 async function loadRepairs(){
   ensurePTEntry();
-  await loadLocalHistory();
+
+  // Primeiro só o necessário para toque/uso do painel.
+  await repairStep(loadLocalHistory,'local-history');
   bindPTCloudSave();
-  await warmPTLogo();
-  await loadPTAltura();
-  await loadPTContrastFix();
+  await repairStep(loadMobileInteractionFix,'mobile-interaction');
+  await repairStep(loadMobilePerformanceFix,'mobile-performance');
+  await repairStep(loadPremiumUX,'premium-ux');
+
+  // Demais módulos entram em blocos curtos, sempre devolvendo o controle à interface.
+  await repairStep(warmPTLogo,'pt-logo');
+  await repairStep(loadPTAltura,'pt-altura');
+  await repairStep(loadPTContrastFix,'pt-contrast');
   ensurePTBadgeStyle();
-  await loadFireChecklistSplit();
-  await loadChecklistConditional();
-  await loadPhotoMultiFix();
-  await loadSaveButtonFix();
-  await loadCnpjAutofill();
-  await loadPdfPhotoFitFix();
-  await loadAbntMaster();
-  await loadFinalPdfFix();
-  // O padrão global já aplica o layout vertical de equipamentos; não carregar uma segunda camada duplicada.
-  await loadGlobalPdfStandard();
-  await loadPdfFilenameGlobal();
-  await loadAutoEmailReport();
-  await loadMobilePerformanceFix();
-  await loadMobileInteractionFix();
-  await loadPremiumUX();
-  try{window.tbmRestoreMobileMutationObserver?.()}catch(_){ }
-  try{window.tbmInstallMobilePdfPerformance?.()}catch(_){ }
-  await loadGlobalPdfPreview();
-  await loadNR24Module();
-  await loadTrainingAttendanceModule();
-  await loadTrainingAttendanceRefinement();
-  await loadSolidStatusBadges();
-  await loadAccidentInjuryModule();
-  await loadAccidentDiagnosisConditional();
+  await repairStep(loadFireChecklistSplit,'fire-checklist');
+  await repairStep(loadChecklistConditional,'checklist');
+  await repairStep(loadPhotoMultiFix,'photos');
+  await repairStep(loadSaveButtonFix,'save');
+  await repairStep(loadCnpjAutofill,'cnpj');
+  await repairStep(loadPdfPhotoFitFix,'pdf-photo');
+  await repairStep(loadAbntMaster,'abnt');
+  await repairStep(loadFinalPdfFix,'pdf-final');
+  await repairStep(loadGlobalPdfStandard,'pdf-standard');
+  await repairStep(loadPdfFilenameGlobal,'pdf-name');
+  await repairStep(loadAutoEmailReport,'email');
+  try{window.tbmRestoreMobileMutationObserver?.()}catch(_){}
+  try{window.tbmInstallMobilePdfPerformance?.()}catch(_){}
+  await repairStep(loadGlobalPdfPreview,'pdf-preview');
+  await repairStep(loadNR24Module,'nr24');
+  await repairStep(loadTrainingAttendanceModule,'training');
+  await repairStep(loadTrainingAttendanceRefinement,'training-refine');
+  await repairStep(loadSolidStatusBadges,'badges');
+  await repairStep(loadAccidentInjuryModule,'accident-injury');
+  await repairStep(loadAccidentDiagnosisConditional,'accident-diagnosis');
   ensurePTEntry();
   ensurePTBadgeStyle();
 }
 
+function scheduleRepairs(){
+  ensurePTEntry();
+  setTimeout(()=>loadRepairs().catch(e=>console.warn('[SST REPAIRS]',e)),650);
+}
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',()=>{ensurePTEntry();loadRepairs()},{once:true});
+  document.addEventListener('DOMContentLoaded',scheduleRepairs,{once:true});
 }else{
-  ensurePTEntry();loadRepairs();
+  scheduleRepairs();
 }
 setTimeout(ensurePTEntry,500);
 setTimeout(ensurePTEntry,1800);
