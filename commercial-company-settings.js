@@ -23,8 +23,39 @@ async function syncCloud(){
  const c=write({id:ctx.company.id,legal_name:ctx.company.legal_name||'',trade_name:ctx.company.trade_name||'',cnpj:ctx.company.cnpj||'',unit_name:ctx.company.unit_name||'',address:ctx.company.address||'',city:ctx.company.city||'',state:ctx.company.state||'',zip_code:ctx.company.zip_code||'',phone:ctx.company.phone||'',email:ctx.company.email||ctx.user.email||'',logo,technicians:techs.map(t=>({id:t.id,nome:t.full_name,funcao:t.job_title,registro:t.professional_registration||''}))});
  apply();return {...ctx,company:c};
 }
+function fillModal(r,c,ctx=null){
+ r.dataset.required=ctx?.user&&!ctx?.company?'1':'0';
+ $('#scLegal',r).value=c.legal_name||'';
+ $('#scTrade',r).value=c.trade_name||'';
+ $('#scCnpj',r).value=c.cnpj||'';
+ $('#scUnit',r).value=c.unit_name||'';
+ $('#scAddress',r).value=c.address||'';
+ $('#scCity',r).value=c.city||'';
+ $('#scState',r).value=c.state||'';
+ $('#scZip',r).value=c.zip_code||'';
+ $('#scPhone',r).value=c.phone||'';
+ $('#scEmail',r).value=c.email||window.SST_COMMERCIAL_CONTEXT?.user?.email||'';
+ showLogo(c.logo||'');
+ const box=$('#scTechs',r);box.innerHTML='';
+ (c.technicians||[]).forEach(t=>box.appendChild(techRow(t)));
+}
 async function open(){
- const ctx=await syncCloud().catch(()=>null);const c=read(),r=modal();r.dataset.required=ctx?.user&&!ctx?.company?'1':'0';$('#scLegal',r).value=c.legal_name||'';$('#scTrade',r).value=c.trade_name||'';$('#scCnpj',r).value=c.cnpj||'';$('#scUnit',r).value=c.unit_name||'';$('#scAddress',r).value=c.address||'';$('#scCity',r).value=c.city||'';$('#scState',r).value=c.state||'';$('#scZip',r).value=c.zip_code||'';$('#scPhone',r).value=c.phone||'';$('#scEmail',r).value=c.email||window.SST_COMMERCIAL_CONTEXT?.user?.email||'';showLogo(c.logo||'');const box=$('#scTechs',r);box.innerHTML='';(c.technicians||[]).forEach(t=>box.appendChild(techRow(t)));r.classList.remove('hidden')
+ const r=modal(),cached=read(),ctx=window.SST_COMMERCIAL_CONTEXT||null;
+ fillModal(r,cached,ctx);
+ r.classList.remove('hidden');
+ msg('');
+
+ // Atualiza os dados da nuvem depois que o modal já abriu.
+ Promise.resolve()
+  .then(()=>syncCloud())
+  .then(freshCtx=>{
+    if(r.classList.contains('hidden'))return;
+    fillModal(r,read(),freshCtx||window.SST_COMMERCIAL_CONTEXT||null);
+  })
+  .catch(e=>{
+    console.warn('[SST EMPRESA SYNC]',e);
+    if(!r.classList.contains('hidden'))msg('Formulário aberto. A sincronização será refeita em segundo plano.');
+  });
 }
 async function save(){
  const r=modal(),legal=$('#scLegal',r).value.trim();if(!legal){msg('Informe a Razão Social.');return}
@@ -48,8 +79,44 @@ async function save(){
 }
 function apply(){
  const c=read();window.SST_DEMO_CONFIG={empresaId:c.id,razaoSocial:c.legal_name,nomeFantasia:c.trade_name,cnpj:c.cnpj,unidade:c.unit_name,endereco:c.address,cidade:c.city,uf:c.state,cep:c.zip_code,telefone:c.phone,email:c.email,logo:c.logo,tecnicos:c.technicians||[]};window.SST_COMMERCIAL_BRAND=window.SST_DEMO_CONFIG;document.title='Sistema de Gestão SST';const brand=$('.brand');if(brand){$('b',brand).textContent='Sistema de Gestão SST';$('span',brand).textContent=c.legal_name?label(c)+(c.unit_name?' • '+c.unit_name:''):'Cadastre sua empresa'}const img=$('.top .logo');if(img){img.src=c.logo||'./icon.svg';img.alt=c.legal_name?label(c):'Sistema SST'}const home=$('#home .hero');if(home&&!$('#scCompanyButton')){const b=document.createElement('button');b.id='scCompanyButton';b.className='btn secondary full';b.style.marginTop='10px';b.textContent='⚙️ Empresa, logo e técnicos';b.onclick=()=>open().catch(e=>alert(e.message));home.appendChild(b)}const company=$('#company'),addr=$('#address'),insp=$('#inspector'),otherBox=$('#otherCompanyBox'),other=$('#otherCompany'),role=$('#role');if(c.legal_name){if(company)company.innerHTML='<option>'+esc(label(c))+'</option>';if(otherBox)otherBox.classList.add('hidden');if(addr)addr.value=full(c);if(insp){insp.innerHTML=(c.technicians||[]).map(t=>'<option value="'+esc(t.nome)+'">'+esc(t.nome)+'</option>').join('')+'<option>Outro</option>';if(c.technicians?.[0]&&role)role.value=c.technicians[0].funcao||''}}else{if(company){company.innerHTML='<option>Outro</option>';company.value='Outro'}if(otherBox)otherBox.classList.remove('hidden');if(other)other.value='';if(addr)addr.value='';if(insp){insp.innerHTML='<option>Outro</option>';insp.value='Outro'}}}
-async function afterLogin(){const ctx=await syncCloud();if(ctx?.user&&!ctx.company)setTimeout(()=>open().catch(()=>{}),100)}
-function boot(){modal();apply();document.addEventListener('sst-client-authenticated',()=>afterLogin().catch(console.error));document.addEventListener('sst-commercial-ready',()=>syncCloud().catch(()=>{}));if(window.SST_COMMERCIAL_CONTEXT?.user)afterLogin().catch(()=>{})}
+function seedFromContext(){
+ const ctx=window.SST_COMMERCIAL_CONTEXT||null,company=ctx?.company;
+ if(!company?.id)return false;
+ const prev=read();
+ write({
+  ...prev,
+  id:company.id,
+  legal_name:company.legal_name||prev.legal_name||'',
+  trade_name:company.trade_name||prev.trade_name||'',
+  cnpj:company.cnpj||prev.cnpj||'',
+  unit_name:company.unit_name||prev.unit_name||'',
+  address:company.address||prev.address||'',
+  city:company.city||prev.city||'',
+  state:company.state||prev.state||'',
+  zip_code:company.zip_code||prev.zip_code||'',
+  phone:company.phone||prev.phone||'',
+  email:company.email||prev.email||'',
+  technicians:prev.technicians||[]
+ });
+ apply();
+ return true;
+}
+async function afterLogin(){
+ seedFromContext();
+ syncCloud().then(ctx=>{
+   seedFromContext();
+   if(ctx?.user&&!ctx.company)setTimeout(()=>open().catch(()=>{}),100);
+ }).catch(e=>console.warn('[SST EMPRESA BACKGROUND]',e));
+}
+function boot(){
+ modal();
+ seedFromContext();
+ apply();
+ document.addEventListener('sst-client-authenticated',()=>afterLogin().catch(console.error));
+ document.addEventListener('sst-commercial-context',()=>seedFromContext());
+ document.addEventListener('sst-commercial-ready',()=>syncCloud().catch(()=>{}));
+ if(window.SST_COMMERCIAL_CONTEXT?.user)afterLogin().catch(()=>{});
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.SSTCompanySettings={open,apply,read,syncCloud};
 })();
