@@ -102,9 +102,19 @@ $('loginBtn').onclick=async()=>{
     if(result.error)throw new Error('Login ou senha incorretos.');
     if(!result.data?.session)throw new Error('Não foi possível iniciar a sessão.');
 
+    // Entrega explícita da sessão para o app. Isso evita travas em WebViews
+    // e navegadores móveis que demoram para restaurar o storage do Supabase.
+    try{
+      sessionStorage.setItem('sst_auth_handoff_v1',JSON.stringify({
+        access_token:result.data.session.access_token,
+        refresh_token:result.data.session.refresh_token,
+        created_at:Date.now()
+      }));
+    }catch{}
+
     say('Acesso liberado. Abrindo o sistema...','ok');
     await clearOldCache();
-    location.href='./app.html?access=ok&v=mobileauth03';
+    location.replace('./app.html?access=ok&v=mobileauth04');
   }catch(e){
     busy(false);
     const t=String(e?.message||e||'Não foi possível entrar.');
