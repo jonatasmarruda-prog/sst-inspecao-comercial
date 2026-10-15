@@ -254,7 +254,7 @@ async function loadModuleState(key){
   return row&&row.kind==='module-state'?clone(row.moduleValue):null;
 }
 async function installCompatibility(){
-  await loadContext();
+  if(!ctx?.user||!ctx?.company)await loadContext();
   window.cloudSetReport=saveReport;
   window.cloudListReports=listReports;
   window.cloudGetReport=getReport;
