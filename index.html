@@ -112,14 +112,6 @@ $('loginBtn').onclick=async()=>{
   }
 };
 
-try{
-  const {data}=await sb.auth.getSession();
-  if(data?.session){
-    say('Sessão encontrada. Abrindo o sistema...','ok');
-    location.href='./app.html?access=ok&v=20261015-login02';
-    return;
-  }
-}catch{}
 $('loginField').focus();
 })();
 </script>
