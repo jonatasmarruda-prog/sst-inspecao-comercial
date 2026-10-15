@@ -2,11 +2,109 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="refresh" content="0;url=https://app-inspecao-incendio-git-demo-clien-b38027-jonatasmarruda-3455.vercel.app/commercial-admin.html">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
 <title>Painel SST Comercial</title>
-<script>location.replace("https://app-inspecao-incendio-git-demo-clien-b38027-jonatasmarruda-3455.vercel.app/commercial-admin.html");</script>
-<style>body{font-family:Arial,sans-serif;background:#eef2f6;color:#17202b;display:grid;place-items:center;min-height:100vh;margin:0;padding:20px}.c{background:#fff;padding:24px;border-radius:18px;box-shadow:0 12px 40px #0002;text-align:center}a{display:inline-block;margin-top:12px;padding:12px 16px;border-radius:10px;background:#0f766e;color:#fff;text-decoration:none;font-weight:700}</style>
+<style>
+:root{--bg:#eef2f6;--ink:#17202b;--muted:#64748b;--line:#dbe2ea;--primary:#0f766e;--danger:#b91c1c;--blue:#075985;--green:#166534}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,Arial,sans-serif;color:var(--ink)}
+.wrap{max-width:1180px;margin:auto;padding:18px}.top{background:linear-gradient(135deg,#0f766e,#075985);color:#fff;padding:20px;border-radius:20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:0 14px 38px #0f172a24}
+.top h1{margin:0;font-size:24px}.top p{margin:3px 0 0;opacity:.85;font-size:12px}.top .spacer{margin-left:auto}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 8px 28px #17202b0b}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kpi{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:14px}.kpi b{display:block;font-size:24px}.kpi span{font-size:11px;color:var(--muted)}
+input,select,button{font:inherit}.field{display:grid;gap:6px;margin-bottom:10px}.field label{font-size:11px;font-weight:800;color:#475569}.field input,.field select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;width:100%}
+.passwrap{position:relative}.passwrap input{width:100%;padding-right:48px}.eye{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;border-radius:9px;cursor:pointer;font-size:18px}.eye:active{background:#e2e8f0}
+.btn{border:0;border-radius:10px;padding:10px 12px;font-weight:800;cursor:pointer}.btn:disabled{opacity:.55;cursor:not-allowed}.primary{background:var(--primary);color:#fff}.secondary{background:#e2e8f0;color:#17202b}.danger{background:#fee2e2;color:#991b1b}.blue{background:#dbeafe;color:#1d4ed8}.green{background:#dcfce7;color:#166534}.hidden{display:none!important}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.search{display:grid;grid-template-columns:1fr auto;gap:8px}
+.client{border:1px solid var(--line);border-radius:14px;padding:14px;margin:9px 0;background:#fff}.clientTop{display:flex;gap:12px;align-items:flex-start}.clientTop .main{flex:1}.client h3{margin:0 0 5px}
+.mini{font-size:11px;color:var(--muted)}.pill{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:900;background:#e2e8f0}.pill.active{background:#dcfce7;color:#166534}.pill.trial,.pill.demo{background:#fef3c7;color:#92400e}.pill.blocked,.pill.expired{background:#fee2e2;color:#991b1b}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}.notice{padding:12px;border-radius:10px;background:#eff6ff;color:#1e40af;font-size:12px}.error{background:#fef2f2;color:#991b1b}.success{background:#f0fdf4;color:#166534}
+.login{max-width:440px;margin:7vh auto}.login h2{margin-top:0}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tab.active{background:var(--primary);color:#fff}.tab{background:#e2e8f0;color:#17202b}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.accessBox{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px;margin-top:14px}.accessBox h3{margin:0 0 8px;color:#166534}.loginTag{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:900;background:#ecfdf5;color:#166534}
+@media(max-width:760px){.grid{grid-template-columns:1fr 1fr}.clientTop{flex-direction:column}.top{border-radius:0;margin:-18px -18px 16px;padding:18px}.search{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}}
+</style>
 </head>
-<body><div class="c"><h2>Painel SST Comercial</h2><p>Abrindo o painel oficial...</p><a href="https://app-inspecao-incendio-git-demo-clien-b38027-jonatasmarruda-3455.vercel.app/commercial-admin.html">Abrir painel</a></div></body>
+<body>
+<div class="wrap">
+  <div id="loginCard" class="card login">
+    <h2>🔐 Painel SST Comercial</h2>
+    <p class="mini">Acesso exclusivo do administrador da plataforma.</p>
+    <div id="loginMsg"></div>
+    <div class="field"><label>E-mail</label><input id="adminEmail" type="email" autocomplete="username" value="jonatasmarruda@gmail.com"></div>
+    <div class="field"><label>Senha</label><div class="passwrap"><input id="adminPass" type="password" autocomplete="current-password"><button id="adminEye" type="button" class="eye" aria-label="Mostrar senha" title="Mostrar senha">👁️</button></div></div>
+    <button id="adminLogin" class="btn primary" style="width:100%">Entrar</button>
+    <button id="adminForgot" class="btn blue" style="width:100%;margin-top:8px">Esqueci minha senha</button>
+    <button id="adminCreate" class="btn secondary" style="width:100%;margin-top:8px">Criar meu acesso administrador</button>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="top">
+      <div><h1>Painel SST Comercial</h1><p>Clientes, logins, licenças e liberações</p></div>
+      <div class="spacer"></div>
+      <button id="adminLogout" class="btn secondary">Sair</button>
+    </div>
+
+    <div id="adminMsg"></div>
+
+    <div class="tabs">
+      <button class="btn tab active" data-tab="clients">👥 Clientes</button>
+      <button class="btn tab" data-tab="create">➕ Criar acesso</button>
+      <button class="btn tab" data-tab="logins">🔐 Logins cadastrados</button>
+    </div>
+
+    <section id="tab-clients">
+      <div class="card"><div class="grid">
+        <div class="kpi"><b id="kTotal">0</b><span>Clientes</span></div>
+        <div class="kpi"><b id="kTrial">0</b><span>Em teste</span></div>
+        <div class="kpi"><b id="kActive">0</b><span>Ativos</span></div>
+        <div class="kpi"><b id="kBlocked">0</b><span>Bloqueados/expirados</span></div>
+      </div></div>
+      <div class="card">
+        <div class="search"><input id="search" placeholder="Pesquisar empresa, CNPJ, nome ou login"><button id="refresh" class="btn secondary">Atualizar</button></div>
+      </div>
+      <div id="clients"></div>
+    </section>
+
+    <section id="tab-create" class="hidden">
+      <div class="card">
+        <h3 style="margin-top:0">Criar acesso do cliente</h3>
+        <div class="notice">Você cria <b>Login + Senha</b> e envia para a pessoa. O cliente não precisa cadastrar e-mail.</div>
+        <div class="formgrid">
+          <div class="field"><label>Empresa *</label><input id="newCompany" placeholder="Nome da empresa"></div>
+          <div class="field"><label>Nome / Responsável</label><input id="newResponsible" placeholder="Nome da pessoa"></div>
+          <div class="field"><label>Login *</label><input id="newLogin" placeholder="Ex.: empresa01" autocomplete="off" autocapitalize="none"></div>
+          <div class="field"><label>Telefone</label><input id="newPhone" placeholder="(00) 00000-0000"></div>
+          <div class="field"><label>CNPJ</label><input id="newCnpj" placeholder="Opcional"></div>
+          <div class="field"><label>Liberação</label><select id="newMode"><option value="trial">Teste</option><option value="active">Liberado</option></select></div>
+          <div class="field" id="daysBox"><label>Dias de teste</label><input id="newDays" type="number" min="1" max="30" value="3"></div>
+          <div class="field"><label>Senha *</label><div class="row"><div class="passwrap" style="flex:1"><input id="newPassword" type="text" autocomplete="new-password"><button id="newEye" class="eye" type="button" title="Mostrar/ocultar senha">🙈</button></div><button id="genPassword" class="btn secondary" type="button">Gerar senha</button></div></div>
+        </div>
+        <div class="mini">Login: 3 a 32 caracteres com letras minúsculas, números, ponto, hífen ou underline. Senha: mínimo 6 caracteres.</div>
+        <div class="actions"><button id="createClient" class="btn primary">Criar acesso</button><button id="clearCreate" class="btn secondary">Limpar</button></div>
+        <div id="createMsg" style="margin-top:10px"></div>
+
+        <div id="createdBox" class="accessBox hidden">
+          <h3>✅ Acesso criado</h3>
+          <div><b>Empresa:</b> <span id="doneCompany"></span></div>
+          <div><b>Login:</b> <span id="doneLogin"></span></div>
+          <div><b>Senha:</b> <span id="donePassword"></span></div>
+          <div><b>Status:</b> <span id="doneStatus"></span></div>
+          <div class="actions"><button id="copyAccess" class="btn green">Copiar Login e Senha</button><a class="btn blue" href="https://jonatasmarruda-prog.github.io/sst-inspecao-comercial/" target="_blank" rel="noopener" style="text-decoration:none">Abrir sistema do cliente</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-logins" class="hidden">
+      <div class="card">
+        <div class="search"><input id="loginSearch" placeholder="Pesquisar nome, empresa ou login"><button id="refreshLogins" class="btn secondary">Atualizar</button></div>
+        <div id="logins"></div>
+      </div>
+    </section>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./commercial-env.js?v=20261015-access02"></script>
+<script src="./commercial-admin.js?v=20261015-access02"></script>
+</body>
 </html>
