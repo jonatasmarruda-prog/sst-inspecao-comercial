@@ -35,6 +35,13 @@ function setRuntimeTokens(accessToken='',refreshToken){
   }catch{}
 }
 
+function markCloudConnected(){
+  const el=document.getElementById('cloudState');
+  if(el){
+    el.textContent='● Nuvem conectada';
+    el.style.color='#22c55e';
+  }
+}
 function bootstrapContext(value){
   if(!value?.user?.id||!value?.company?.id)return false;
   ctx={
@@ -44,6 +51,7 @@ function bootstrapContext(value){
     membership:value.membership||null
   };
   window.SST_COMMERCIAL_CONTEXT=clone(ctx);
+  markCloudConnected();
   document.dispatchEvent(new CustomEvent('sst-commercial-context',{detail:clone(ctx)}));
   return true;
 }
@@ -137,6 +145,7 @@ async function loadContext(){
 
   ctx={user,company,license,membership};
   window.SST_COMMERCIAL_CONTEXT=clone(ctx);
+  if(company)markCloudConnected();
   document.dispatchEvent(new CustomEvent('sst-commercial-context',{detail:clone(ctx)}));
   return clone(ctx);
 }
