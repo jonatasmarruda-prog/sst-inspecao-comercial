@@ -146,7 +146,7 @@ async function ready(force=false){
     }
 
     if(!directToken){
-      location.replace('./?v=mobileauth05');
+      location.replace('./?v=directopen01');
       return;
     }
 
@@ -199,15 +199,72 @@ function bind(){
     }
     if(event==='SIGNED_OUT'&&authenticated){
       api.setRuntimeTokens?.('','');
-      location.replace('./?v=mobileauth05');
+      location.replace('./?v=directopen01');
       return;
     }
   });
   authSubscription=result?.data?.subscription||true;
 }
+function readBootstrap(){
+  let raw='';
+  try{raw=sessionStorage.getItem('sst_bootstrap_context_v1')||''}catch{}
+  if(!raw){try{raw=localStorage.getItem('sst_bootstrap_context_v1')||''}catch{}}
+  if(!raw)return null;
+  try{
+    const value=JSON.parse(raw);
+    const fresh=value?.created_at&&(Date.now()-Number(value.created_at))<10*60*1000;
+    if(!fresh||!value?.user?.id||!value?.company?.id)return null;
+    return value;
+  }catch{return null}
+}
+function openImmediately(api,ctx){
+  if(!api?.bootstrapContext?.(ctx))return false;
+  authenticated=true;
+  document.documentElement.dataset.sstAuthenticated='true';
+  installHeaderLogout();
+  document.dispatchEvent(new CustomEvent('sst-client-authenticated',{detail:ctx}));
+
+  // Nunca bloqueia a interface: tudo abaixo é só sincronização em segundo plano.
+  Promise.resolve()
+    .then(()=>withTimeout(api.installCompatibility(),8000,'Preparação complementar excedeu o tempo.'))
+    .catch(e=>console.warn('[SST PREPARAÇÃO COMPLEMENTAR]',e));
+
+  const refreshToken=api.getRuntimeRefreshToken?.()||'';
+  const accessToken=api.getRuntimeAccessToken?.()||'';
+  if(accessToken&&refreshToken){
+    Promise.resolve()
+      .then(()=>withTimeout(
+        api.authSb.auth.setSession({access_token:accessToken,refresh_token:refreshToken}),
+        8000,
+        'Restauração de sessão em segundo plano excedeu o tempo.'
+      ))
+      .then(result=>{
+        const s=result?.data?.session;
+        if(s?.access_token)api.setRuntimeTokens?.(s.access_token,s.refresh_token||refreshToken);
+      })
+      .catch(e=>console.warn('[SST SESSÃO EM SEGUNDO PLANO]',e));
+  }
+
+  // Revalida os dados sem colocar tela por cima do sistema.
+  Promise.resolve()
+    .then(()=>withTimeout(api.loadContext(),10000,'Revalidação excedeu o tempo.'))
+    .catch(e=>console.warn('[SST REVALIDAÇÃO EM SEGUNDO PLANO]',e));
+  return true;
+}
 function boot(){
   if(window.__SST_CLIENT_AUTH_BOOTED__)return;
   window.__SST_CLIENT_AUTH_BOOTED__=true;
+  const api=window.SSTCommercialCloud;
+  const bootstrap=readBootstrap();
+
+  // Fluxo normal vindo do Login: abre o sistema direto, sem overlay.
+  if(api?.configured&&bootstrap&&api.activeLicense?.(bootstrap.license)){
+    bind();
+    openImmediately(api,bootstrap);
+    return;
+  }
+
+  // Fallback apenas para acesso direto ao app.html.
   gate();bind();ready();
 }
 boot();
