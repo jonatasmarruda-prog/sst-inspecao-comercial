@@ -139,5 +139,5 @@ function bind(){
   authSubscription=result?.data?.subscription||true;
 }
 function boot(){gate();bind();ready()}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+boot();
 })();
