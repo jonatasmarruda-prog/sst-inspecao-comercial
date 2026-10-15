@@ -326,7 +326,7 @@ async function installCompatibility(){
 
 window.SSTCommercialCloud={
   configured:true,sb,authSb,activeLicense,loadContext,getContext:()=>clone(ctx),
-  setRuntimeTokens,getRuntimeAccessToken:()=>runtimeAccessToken,
+  setRuntimeTokens,getRuntimeAccessToken:()=>runtimeAccessToken,getRuntimeRefreshToken:()=>runtimeRefreshToken,
   signUp,resendSignup,signIn,signOut,resetPassword,
   createCompany,updateCompany,uploadLogo,logoDataUrl,
   listResponsibles,saveResponsible,deleteResponsible,
