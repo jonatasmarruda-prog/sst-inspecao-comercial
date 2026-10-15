@@ -4,6 +4,7 @@
 const $=(s,r=document)=>r.querySelector(s);
 let authSubscription=null;
 let loading=false;
+let authenticated=false;
 
 function css(){
   if($('#sstClientAuthStyle'))return;
@@ -68,6 +69,7 @@ function showError(message){
   state('Não foi possível concluir o carregamento.',message||'Tente novamente.',true);
 }
 function showLoading(text='Carregando seu acesso...'){
+  if(authenticated)return;
   const r=gate();
   r.classList.remove('hidden');
   $('#scaSpin',r).classList.remove('hidden');
@@ -92,6 +94,7 @@ function installHeaderLogout(){
   }
 }
 async function ready(force=false){
+  if(authenticated)return;
   if(loading&&!force)return;
   loading=true;
   showLoading('Verificando seu acesso...');
@@ -111,7 +114,7 @@ async function ready(force=false){
 
     const session=sessionResult.data.session;
     const accessCheck=await withTimeout(
-      api.sb.from('sst_access_accounts').select('id,active').eq('user_id',session.user.id).eq('active',true).limit(1).maybeSingle(),
+      api.sb.from('sst_access_accounts').select('id,active,company_id').eq('user_id',session.user.id).eq('active',true).limit(1).maybeSingle(),
       8000,
       'Não foi possível validar o Login cadastrado.'
     );
@@ -122,15 +125,20 @@ async function ready(force=false){
     }
 
     showLoading('Carregando sua empresa...');
-    const ctx=await withTimeout(api.loadContext(),12000,'Demorou demais para carregar os dados da empresa.');
+    const ctx=await withTimeout(api.loadContext(),10000,'Demorou demais para carregar os dados da empresa.');
     if(!ctx?.user||!ctx?.company)throw new Error('Conta sem empresa vinculada ou acesso indisponível.');
 
-    showLoading('Preparando o sistema...');
-    await withTimeout(api.installCompatibility(),12000,'Demorou demais para preparar os módulos do sistema.');
-
+    // A partir daqui o acesso principal já está validado.
+    // Libera a interface imediatamente; tarefas complementares não podem bloquear o usuário.
+    authenticated=true;
     installHeaderLogout();
     gate().classList.add('hidden');
+    document.documentElement.dataset.sstAuthenticated='true';
     document.dispatchEvent(new CustomEvent('sst-client-authenticated',{detail:ctx}));
+
+    Promise.resolve()
+      .then(()=>withTimeout(api.installCompatibility(),8000,'Preparação complementar excedeu o tempo.'))
+      .catch(e=>console.warn('[SST PREPARAÇÃO COMPLEMENTAR]',e));
   }catch(e){
     console.error('[SST ACCESS LOAD]',e);
     showError(String(e?.message||'Falha ao carregar o sistema.'));
@@ -150,6 +158,10 @@ function bind(){
   });
   authSubscription=result?.data?.subscription||true;
 }
-function boot(){gate();bind();ready()}
+function boot(){
+  if(window.__SST_CLIENT_AUTH_BOOTED__)return;
+  window.__SST_CLIENT_AUTH_BOOTED__=true;
+  gate();bind();ready();
+}
 boot();
 })();
