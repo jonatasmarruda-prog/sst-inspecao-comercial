@@ -128,14 +128,18 @@ function render(){
     const l=x.license||{},name=x.trade_name||x.legal_name||'Empresa';
     const loginTag=x.access?.login?'<span class="loginTag">Login: '+esc(x.access.login)+'</span>':'<span class="pill">Acesso antigo</span>';
     const deleteBtn=x.access?.id
-      ?'<button class="btn danger" data-act="deleteAccess" data-access="'+esc(x.access.id)+'">Excluir nome/acesso</button>'
-      :'<button class="btn danger" data-act="archiveCompany">Excluir nome</button>';
+      ?'<button class="btn danger" data-act="deleteAccess" data-access="'+esc(x.access.id)+'">Excluir cadastro</button>'
+      :'<button class="btn danger" data-act="archiveCompany">Excluir cadastro</button>';
+    const openBtn=x.access?.login
+      ?'<a class="btn green" href="'+CLIENT_URL+'?login='+encodeURIComponent(x.access.login)+'" target="_blank" rel="noopener" style="text-decoration:none">Abrir sistema</a>'
+      :'<a class="btn green" href="'+CLIENT_URL+'" target="_blank" rel="noopener" style="text-decoration:none">Abrir sistema</a>';
     return '<div class="client" data-id="'+esc(x.id)+'"><div class="clientTop"><div class="main"><h3>'+esc(name)+'</h3><div class="mini">'+esc(x.legal_name||'')+' • '+esc(x.cnpj||'Sem CNPJ')+'</div><div class="mini">'+esc(x.owner?.full_name||x.owner?.email||x.email||'Sem responsável')+'</div><div class="mini">Teste até: '+esc(fmt(l.trial_ends_at))+' • Ativo até: '+esc(fmt(l.active_until))+'</div><div style="margin-top:6px">'+loginTag+'</div></div><span class="pill '+statusClass(l.status)+'">'+esc(String(l.status||'sem licença').toUpperCase())+'</span></div><div class="actions">'+
       '<button class="btn blue" data-act="trial2">Teste +2 dias</button>'+
       '<button class="btn blue" data-act="trial3">Teste +3 dias</button>'+
       '<button class="btn primary" data-act="activate">Liberar</button>'+
       '<button class="btn danger" data-act="block">Bloquear</button>'+
       '<button class="btn secondary" data-act="expire">Expirar</button>'+
+      openBtn+
       deleteBtn+
       '</div></div>';
   }).join(''):'<div class="card mini">Nenhum cliente encontrado.</div>';
@@ -149,7 +153,7 @@ function renderLogins(){
   });
   $('logins').innerHTML=items.length?items.map(a=>{
     const c=companyById.get(a.company_id)||{};
-    return '<div class="client" data-access-id="'+esc(a.id)+'"><div class="clientTop"><div class="main"><h3>'+esc(a.display_name||c.trade_name||'Cliente')+'</h3><div class="mini">'+esc(c.trade_name||c.legal_name||'Empresa')+'</div><div style="margin-top:6px"><span class="loginTag">'+esc(a.login)+'</span></div></div></div><div class="actions"><button class="btn blue" data-access-act="reset">Redefinir senha</button><button class="btn danger" data-access-act="delete">Excluir acesso</button></div></div>';
+    return '<div class="client" data-access-id="'+esc(a.id)+'"><div class="clientTop"><div class="main"><h3>'+esc(a.display_name||c.trade_name||'Cliente')+'</h3><div class="mini">'+esc(c.trade_name||c.legal_name||'Empresa')+'</div><div style="margin-top:6px"><span class="loginTag">Login: '+esc(a.login)+'</span></div><div class="mini" style="margin-top:6px">Senha: •••••••• <span style="opacity:.8">— por segurança, use “Redefinir senha” para trocar.</span></div></div></div><div class="actions"><a class="btn green" href="'+CLIENT_URL+'?login='+encodeURIComponent(a.login)+'" target="_blank" rel="noopener" style="text-decoration:none">Abrir sistema</a><button class="btn blue" data-access-act="reset">Redefinir senha</button><button class="btn danger" data-access-act="delete">Excluir cadastro</button></div></div>';
   }).join(''):'<div class="mini" style="padding:14px">Nenhum login cadastrado.</div>';
 }
 
@@ -169,11 +173,11 @@ async function act(companyId,action,button){
     if(action==='deleteAccess'){
       const accessId=button?.dataset.access;
       if(!accessId)return;
-      if(!confirm('Excluir este nome e acesso? A pessoa perderá o acesso imediatamente. O histórico de relatórios será preservado.'))return;
+      if(!confirm('Excluir este cadastro e acesso? A pessoa perderá o acesso imediatamente. Os relatórios históricos serão preservados.'))return;
       await adminAction({action:'delete',accessId});msg('Acesso excluído com sucesso.',false,true);await load();return;
     }
     if(action==='archiveCompany'){
-      if(!confirm('Excluir este nome do painel e bloquear este cliente? O histórico será preservado.'))return;
+      if(!confirm('Excluir este cadastro do painel e bloquear este cliente? Os relatórios históricos serão preservados.'))return;
       await adminAction({action:'archive_company',companyId});msg('Cliente removido do painel e bloqueado.',false,true);await load();return;
     }
   }catch(e){msg(e.message||'Não foi possível alterar o cliente.',true)}
@@ -211,6 +215,7 @@ async function createClient(){
     lastAccess={company:companyName,login,password,status:out.client?.status||mode};
     $('doneCompany').textContent=companyName;$('doneLogin').textContent=login;$('donePassword').textContent=password;
     $('doneStatus').textContent=out.client?.status==='active'?'LIBERADO':'TESTE';
+    const openCreated=$('openCreatedSystem');if(openCreated)openCreated.href=CLIENT_URL+'?login='+encodeURIComponent(login);
     $('createdBox').classList.remove('hidden');box('createMsg','Acesso criado com sucesso.',false,true);
     await load();
   }catch(e){box('createMsg',e.message||'Não foi possível criar o acesso.',true)}
@@ -259,7 +264,7 @@ async function boot(){
             const np=prompt('Digite a NOVA senha (mínimo 6 caracteres):');if(np===null)return;if(np.length<6)throw new Error('A senha precisa ter pelo menos 6 caracteres.');
             await adminAction({action:'reset_password',accessId,password:np});alert('Senha alterada com sucesso.');
           }else if(action==='delete'){
-            if(!confirm('Excluir este acesso? A pessoa deixará de entrar. O histórico será preservado.'))return;
+            if(!confirm('Excluir este cadastro? A pessoa deixará de entrar. Os relatórios históricos serão preservados.'))return;
             await adminAction({action:'delete',accessId});await load();
           }
         }catch(x){alert(x.message||x)}
