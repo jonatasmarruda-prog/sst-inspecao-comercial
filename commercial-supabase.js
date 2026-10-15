@@ -27,19 +27,62 @@ async function getUser(){
   return data?.user||null;
 }
 async function loadContext(){
-  const user=await getUser();if(!user){ctx={user:null,company:null,license:null,membership:null};return clone(ctx)}
-  const {data:members,error:mErr}=await sb.from('company_members').select('*').eq('user_id',user.id).eq('active',true).limit(1);
-  if(mErr)throw mErr;
-  const membership=members?.[0]||null;
-  let company=null,license=null;
-  if(membership){
-    const [{data:c,error:cErr},{data:l,error:lErr}]=await Promise.all([
-      sb.from('companies').select('*').eq('id',membership.company_id).single(),
-      sb.from('licenses').select('*').eq('company_id',membership.company_id).single()
-    ]);
-    if(cErr)throw cErr;if(lErr&&lErr.code!=='PGRST116')throw lErr;
-    company=c||null;license=l||null;
+  const user=await getUser();
+  if(!user){
+    ctx={user:null,company:null,license:null,membership:null};
+    return clone(ctx);
   }
+
+  // O Login comercial é a fonte principal do vínculo com a empresa.
+  // Isso evita travas quando existir cadastro antigo/duplicado em company_members.
+  const {data:access,error:aErr}=await sb
+    .from('sst_access_accounts')
+    .select('company_id,active')
+    .eq('user_id',user.id)
+    .eq('active',true)
+    .limit(1)
+    .maybeSingle();
+  if(aErr)throw aErr;
+
+  let membership=null;
+  let companyId=access?.company_id||null;
+
+  if(companyId){
+    const {data:m,error:mErr}=await sb
+      .from('company_members')
+      .select('*')
+      .eq('user_id',user.id)
+      .eq('company_id',companyId)
+      .eq('active',true)
+      .limit(1)
+      .maybeSingle();
+    if(mErr)throw mErr;
+    membership=m||{company_id:companyId,user_id:user.id,member_role:'owner',active:true};
+  }else{
+    const {data:members,error:mErr}=await sb
+      .from('company_members')
+      .select('*')
+      .eq('user_id',user.id)
+      .eq('active',true)
+      .order('created_at',{ascending:false})
+      .limit(1);
+    if(mErr)throw mErr;
+    membership=members?.[0]||null;
+    companyId=membership?.company_id||null;
+  }
+
+  let company=null,license=null;
+  if(companyId){
+    const [{data:companyRow,error:cErr},{data:licenseRow,error:lErr}]=await Promise.all([
+      sb.from('companies').select('*').eq('id',companyId).limit(1).maybeSingle(),
+      sb.from('licenses').select('*').eq('company_id',companyId).limit(1).maybeSingle()
+    ]);
+    if(cErr)throw cErr;
+    if(lErr)throw lErr;
+    company=companyRow||null;
+    license=licenseRow||null;
+  }
+
   ctx={user,company,license,membership};
   window.SST_COMMERCIAL_CONTEXT=clone(ctx);
   document.dispatchEvent(new CustomEvent('sst-commercial-context',{detail:clone(ctx)}));
