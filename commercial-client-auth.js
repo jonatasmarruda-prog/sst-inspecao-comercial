@@ -109,6 +109,18 @@ async function ready(force=false){
       return;
     }
 
+    const session=sessionResult.data.session;
+    const accessCheck=await withTimeout(
+      api.sb.from('sst_access_accounts').select('id,active').eq('user_id',session.user.id).eq('active',true).limit(1).maybeSingle(),
+      8000,
+      'Não foi possível validar o Login cadastrado.'
+    );
+    if(accessCheck.error||!accessCheck.data){
+      try{await api.signOut()}catch{}
+      location.replace('./');
+      return;
+    }
+
     showLoading('Carregando sua empresa...');
     const ctx=await withTimeout(api.loadContext(),12000,'Demorou demais para carregar os dados da empresa.');
     if(!ctx?.user||!ctx?.company)throw new Error('Conta sem empresa vinculada ou acesso indisponível.');
