@@ -440,15 +440,31 @@ const docDefinition={
 const filename='Laudo_Inspecao_'+state.id+'.pdf';
 if(action===true)action='share';
 if(action===false)action='download';
+
+const pdf=window.pdfMake.createPdf(docDefinition);
+const blob=await Promise.race([
+  new Promise((resolve,reject)=>{
+    try{pdf.getBlob(b=>b&&b.size?resolve(b):reject(new Error('PDF vazio.')))}
+    catch(e){reject(e)}
+  }),
+  new Promise((_,reject)=>setTimeout(()=>reject(new Error('O PDF demorou demais para ser gerado.')),25000))
+]);
+
 if(action==='share'){
- try{
-   if(typeof window.tbmCompartilharPdf==='function')await window.tbmCompartilharPdf(docDefinition,filename,{title:'Laudo de Inspeção SST',text:'Laudo '+state.id+' • '+typeName});
-   else{alert('O compartilhamento direto não está disponível neste dispositivo. O PDF será baixado automaticamente.');window.pdfMake.createPdf(docDefinition).download(filename)}
- }catch(e){console.error('[COMPARTILHAR PDF]',e);alert('Não foi possível compartilhar diretamente. O PDF será baixado automaticamente.');window.pdfMake.createPdf(docDefinition).download(filename)}
- finally{$('modal').classList.add('hidden')}
- return;
+  try{
+    const file=new File([blob],filename,{type:'application/pdf'});
+    if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){
+      await navigator.share({title:'Laudo de Inspeção SST',text:'Laudo '+state.id+' • '+typeName,files:[file]});
+      return;
+    }
+  }catch(e){
+    if(String(e?.name||'')==='AbortError')return;
+    console.warn('[COMPARTILHAR PDF]',e);
+  }
 }
-window.pdfMake.createPdf(docDefinition).download(filename);
+const url=URL.createObjectURL(blob),a=document.createElement('a');
+a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+setTimeout(()=>URL.revokeObjectURL(url),60000);
 }catch(e){
  console.error('[PDFMAKE]',e);
  alert('Não foi possível gerar o PDF: '+(e?.message||e));
