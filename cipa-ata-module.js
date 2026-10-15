@@ -40,6 +40,10 @@ function setCloudState(text,type=''){
   el.textContent=text;
   el.style.color=type==='err'?'#b91c1c':type==='ok'?'#15803d':'#64748b';
 }
+function commercialCloud(){
+  const api=window.SSTCommercialCloud;
+  return api?.configured?api:null;
+}
 async function cipaFirestore(){
   if(typeof window.ensureFirestore==='function')return await window.ensureFirestore();
   if(window.SST?.fs)return window.SST.fs;
@@ -49,24 +53,38 @@ function cleanCloudMinute(data,id){
   const x={...(data||{})};delete x.cloudUpdatedAt;x.id=id||x.id;return x;
 }
 async function cloudSaveMinute(x){
+  const api=commercialCloud();
+  if(api?.saveCipaMinute)return await api.saveCipaMinute(x);
   const fs=await cipaFirestore();
   const data={...x,kind:'cipa-minute',cloudUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()};
   await fs.collection(CLOUD_COLLECTION).doc(String(x.id)).set(data,{merge:true});
+  return x;
 }
 async function cloudDeleteMinute(id){
+  const api=commercialCloud();
+  if(api?.deleteCipaMinute)return await api.deleteCipaMinute(id);
   const fs=await cipaFirestore();
   await fs.collection(CLOUD_COLLECTION).doc(String(id)).delete();
 }
 async function cloudLoadMinutes(){
+  const api=commercialCloud();
+  if(api?.listCipaMinutes)return await api.listCipaMinutes();
   const fs=await cipaFirestore();
   const snap=await fs.collection(CLOUD_COLLECTION).get();
   return snap.docs.filter(d=>d.data()?.kind==='cipa-minute').map(d=>cleanCloudMinute(d.data(),d.id));
 }
 async function cloudSaveMembers(list){
+  const api=commercialCloud();
+  if(api?.saveModuleState)return await api.saveModuleState('cipa-ata-members',{members:list,updatedAt:new Date().toISOString()});
   const fs=await cipaFirestore();
   await fs.collection(CLOUD_COLLECTION).doc(CLOUD_MEMBERS_ID).set({kind:'cipa-members',members:list,cloudUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
 }
 async function cloudLoadMembers(){
+  const api=commercialCloud();
+  if(api?.loadModuleState){
+    const row=await api.loadModuleState('cipa-ata-members');
+    return Array.isArray(row?.members)?row.members:[];
+  }
   const fs=await cipaFirestore();
   const doc=await fs.collection(CLOUD_COLLECTION).doc(CLOUD_MEMBERS_ID).get();
   return doc.exists&&Array.isArray(doc.data()?.members)?doc.data().members:[];
@@ -117,6 +135,15 @@ function buildMembersFromManagement(payload){
   return list;
 }
 async function loadCipaManagement(){
+  try{
+    const local=JSON.parse(localStorage.getItem('sst_comercial_cipa_management_v2')||'null');
+    if(local)return local;
+  }catch(_){}
+  const api=commercialCloud();
+  if(api?.loadModuleState){
+    const row=await api.loadModuleState('cipa-management').catch(()=>null);
+    if(row)return row;
+  }
   const fs=await cipaFirestore();
   const doc=await fs.collection(CLOUD_COLLECTION).doc(CIPA_MANAGEMENT_ID).get();
   return doc.exists?(doc.data()?.payload||null):null;
@@ -410,13 +437,12 @@ async function saveCurrent(){
   saveMinutes(list.slice(0,120));renderHistory();
   setCloudState('☁️ Salvando na nuvem...');
   try{
-    await cloudSaveMinute(x);
-    setCloudState('☁️ Ata salva e sincronizada','ok');
-    alert('Ata salva no histórico e sincronizada com a nuvem.');
+    const saved=await cloudSaveMinute(x);
+    if(saved?.cloudId)x.cloudId=saved.cloudId;
+    setCloudState('✅ Ata salva e sincronizada na nuvem','ok');
   }catch(e){
     console.warn('[CIPA SAVE CLOUD]',e);
-    setCloudState('☁️ Salva no aparelho • nuvem indisponível','err');
-    alert('Ata salva no histórico deste aparelho. A sincronização com a nuvem será tentada novamente quando houver conexão.');
+    setCloudState('⚠️ Ata salva no aparelho • sincronização pendente','err');
   }
   setTimeout(()=>{try{window.tbmAutoEmailSavedReport?.({mode:'cipa'})}catch(e){console.warn('[CIPA EMAIL]',e)}},600);
 }
@@ -515,6 +541,20 @@ function pdfBlob(doc){
 }
 async function makeCipaPdf(action='preview'){
   const x=collect();if(!validateMeeting(x))return false;
+
+  // Abre a aba no mesmo gesto do usuário; navegadores móveis bloqueiam
+  // window.open quando ele acontece somente depois de awaits demorados.
+  let preview=null;
+  if(action==='preview'){
+    try{
+      preview=window.open('about:blank','_blank');
+      if(preview){
+        preview.document.write('<!doctype html><meta charset="utf-8"><title>Gerando Ata da CIPA</title><style>body{font-family:Arial;padding:28px;color:#17202b} .box{max-width:520px;margin:40px auto;padding:24px;border:1px solid #ddd;border-radius:16px}</style><div class="box"><h2>Gerando Ata da CIPA...</h2><p>O documento será exibido nesta aba.</p></div>');
+        preview.document.close();
+      }
+    }catch(_){}
+  }
+
   try{
     const built=await buildCipaPdf(x);
     if(action==='download'){window.pdfMake.createPdf(built.doc).download(built.filename);return true}
@@ -523,13 +563,22 @@ async function makeCipaPdf(action='preview'){
       const file=new File([blob],built.filename,{type:'application/pdf'});
       if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({title:built.title,text:'Ata da CIPA • '+formatDateBR(x.date),files:[file]});return true}
       window.pdfMake.createPdf(built.doc).download(built.filename);
-      alert('O compartilhamento direto não está disponível neste aparelho. O PDF foi baixado para você compartilhar.');return true;
+      return true;
     }
     const blob=await pdfBlob(built.doc),url=URL.createObjectURL(blob);
-    const win=window.open(url,'_blank');
-    if(!win){URL.revokeObjectURL(url);window.pdfMake.createPdf(built.doc).download(built.filename);alert('O navegador bloqueou a visualização. O PDF foi baixado.');return true}
-    setTimeout(()=>URL.revokeObjectURL(url),300000);return true;
-  }catch(e){console.error('[CIPA PDF]',e);alert(e?.message||'Não foi possível gerar a ata.');return false}
+    if(preview){
+      preview.location.replace(url);
+      setTimeout(()=>URL.revokeObjectURL(url),300000);
+      return true;
+    }
+    window.pdfMake.createPdf(built.doc).download(built.filename);
+    return true;
+  }catch(e){
+    console.error('[CIPA PDF]',e);
+    try{if(preview&&!preview.closed)preview.close()}catch(_){}
+    alert(e?.message||'Não foi possível gerar a ata.');
+    return false;
+  }
 }
 window.makeCipaPdf=makeCipaPdf;
 window.tbmCipaPdfMeta=()=>{const x=collect();return {id:x.id,type:'Ata da CIPA - '+ordinal(x.meetingNumber)+' Reunião Ordinária - '+x.term,company:(window.SST_DEMO_CONFIG?.nomeFantasia||window.SST_DEMO_CONFIG?.razaoSocial||'Empresa cadastrada'),sector:'CIPA',filename:cipaFilename(x)}};
