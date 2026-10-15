@@ -254,17 +254,44 @@ function openImmediately(api,ctx){
 function boot(){
   if(window.__SST_CLIENT_AUTH_BOOTED__)return;
   window.__SST_CLIENT_AUTH_BOOTED__=true;
+
   const api=window.SSTCommercialCloud;
   const bootstrap=readBootstrap();
+  const cameFromLogin=new URLSearchParams(location.search).get('access')==='ok';
 
-  // Fluxo normal vindo do Login: abre o sistema direto, sem overlay.
+  // REGRA PRINCIPAL:
+  // se o Login já foi aceito, nunca mostrar overlay de "Verificando" / "Carregando empresa".
+  if(cameFromLogin&&api?.configured){
+    bind();
+    authenticated=true;
+    document.documentElement.dataset.sstAuthenticated='true';
+    installHeaderLogout();
+
+    if(bootstrap&&api.activeLicense?.(bootstrap.license)){
+      openImmediately(api,bootstrap);
+    }else{
+      // Abre a interface imediatamente e recupera o contexto sem bloquear a tela.
+      Promise.resolve()
+        .then(()=>withTimeout(api.loadContext(),10000,'Revalidação excedeu o tempo.'))
+        .then(ctx=>{
+          if(ctx?.user&&ctx?.company){
+            api.bootstrapContext?.(ctx);
+            document.dispatchEvent(new CustomEvent('sst-client-authenticated',{detail:ctx}));
+            return withTimeout(api.installCompatibility(),8000,'Preparação complementar excedeu o tempo.');
+          }
+        })
+        .catch(e=>console.warn('[SST CONTEXTO EM SEGUNDO PLANO]',e));
+    }
+    return;
+  }
+
+  // Fallback para quem tenta abrir app.html diretamente sem passar pelo Login.
   if(api?.configured&&bootstrap&&api.activeLicense?.(bootstrap.license)){
     bind();
     openImmediately(api,bootstrap);
     return;
   }
 
-  // Fallback apenas para acesso direto ao app.html.
   gate();bind();ready();
 }
 boot();
