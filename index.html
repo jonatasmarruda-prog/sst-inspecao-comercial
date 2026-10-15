@@ -27,49 +27,62 @@ button:disabled,input:disabled{opacity:.6;cursor:not-allowed}
 <div class="card">
   <div class="badge">🔒 ACESSO CONTROLADO</div>
   <h1>Sistema de Gestão SST</h1>
-  <p>Entre com o <b>cadastro já existente</b> no sistema.</p>
-
-  <label for="email">E-mail cadastrado</label>
+  <p>Entre com seu e-mail e senha para acessar os dados da sua empresa.</p>
+  <label for="email">E-mail</label>
   <input id="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false">
-
   <label for="pass">Senha</label>
   <div class="pw">
     <input id="pass" type="password" autocomplete="current-password">
     <button id="eye" class="eye" type="button" aria-label="Mostrar senha">👁️</button>
   </div>
-
-  <button id="login" class="action primary" type="button">Entrar com cadastro existente</button>
-  <button id="forgot" class="action secondary" type="button">Esqueci minha senha</button>
-
-  <div id="msg" class="msg">Verificando acesso...</div>
+  <button id="loginBtn" class="action primary" type="button">Entrar</button>
+  <button id="createBtn" class="action secondary" type="button">Criar acesso</button>
+  <button id="forgotBtn" class="action secondary" type="button">Esqueci minha senha</button>
+  <div id="msg" class="msg">Preparando acesso seguro...</div>
   <div class="small">Sistema Comercial SST • acesso individual por empresa</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-(()=>{
+(async()=>{
 'use strict';
 const SB_URL='https://cbyoetsdhohmrpzjrttf.supabase.co';
 const SB_KEY='sb_publishable_ODkVvlEdCvEOUEuPCKjOCg_v4RuGkQD';
 const $=id=>document.getElementById(id);
 const msg=$('msg');
 
-function say(text,kind=''){
-  msg.textContent=text||'';
-  msg.className='msg '+kind;
+function say(t,k=''){msg.textContent=t||'';msg.className='msg '+k}
+function busy(v,label='Entrando...'){
+  ['email','pass','loginBtn','createBtn','forgotBtn'].forEach(id=>$(id).disabled=!!v);
+  $('loginBtn').textContent=v?label:'Entrar';
 }
-function busy(on){
-  ['email','pass','login','forgot'].forEach(id=>$(id).disabled=!!on);
-  $('login').textContent=on?'Entrando...':'Entrar com cadastro existente';
+function friendly(e){
+  const raw=String(e?.message||e||'');
+  const s=raw.toLowerCase();
+  if(s.includes('invalid login credentials')||s.includes('invalid credentials'))return 'E-mail ou senha incorretos.';
+  if(s.includes('email not confirmed'))return 'Seu e-mail ainda não foi liberado.';
+  if(s.includes('rate limit')||s.includes('too many'))return 'Muitas tentativas. Aguarde um pouco e tente novamente.';
+  if(s.includes('failed to fetch')||s.includes('network'))return 'Falha de conexão com o servidor. Atualize a página e tente novamente.';
+  if(s.includes('already')&&(s.includes('registered')||s.includes('exists')))return 'Este e-mail já possui cadastro. Use Entrar ou Esqueci minha senha.';
+  return raw||'Não foi possível concluir o acesso.';
 }
-function friendly(error){
-  const raw=String(error?.message||error||'');
-  const low=raw.toLowerCase();
-  if(low.includes('invalid login credentials')||low.includes('invalid credentials'))return 'E-mail ou senha incorretos.';
-  if(low.includes('email not confirmed'))return 'Este cadastro ainda não foi liberado.';
-  if(low.includes('rate limit')||low.includes('too many'))return 'Muitas tentativas em pouco tempo. Tente novamente mais tarde.';
-  if(low.includes('failed to fetch')||low.includes('network')||low.includes('load failed'))return 'Falha de conexão. Verifique a internet e tente novamente.';
-  return raw||'Não foi possível acessar.';
+async function cleanupOldCache(){
+  try{
+    if('serviceWorker' in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+  }catch{}
+  try{
+    if(window.caches){
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(k=>k.startsWith('inspecao-sst-')).map(k=>caches.delete(k)));
+    }
+  }catch{}
+}
+function openApp(){
+  const u='./app.html?access=ok&v=20261015-03';
+  location.href=u;
 }
 if(!window.supabase?.createClient){
   say('Não foi possível carregar o serviço de acesso. Atualize a página.','err');
@@ -78,56 +91,89 @@ if(!window.supabase?.createClient){
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
-function goApp(){window.location.href='./app.html';}
+await cleanupOldCache();
 
 $('eye').onclick=()=>{
   const p=$('pass'),show=p.type==='password';
   p.type=show?'text':'password';
   $('eye').textContent=show?'🙈':'👁️';
 };
-$('login').onclick=async()=>{
+$('email').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
+$('pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
+
+$('loginBtn').onclick=async()=>{
   try{
     const email=$('email').value.trim().toLowerCase();
     const password=$('pass').value;
-    if(!email||!password)throw new Error('Informe o e-mail cadastrado e a senha.');
-    busy(true);say('Validando seu cadastro...');
-    const {data,error}=await sb.auth.signInWithPassword({email,password});
-    if(error)throw error;
-    if(!data?.session)throw new Error('Não foi possível iniciar a sessão.');
-    say('Cadastro reconhecido. Abrindo o sistema...','ok');
-    goApp();
+    if(!email||!password)throw new Error('Informe e-mail e senha.');
+    busy(true);say('Validando acesso...');
+    const result=await Promise.race([
+      sb.auth.signInWithPassword({email,password}),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo de conexão excedido. Tente novamente.')),15000))
+    ]);
+    if(result.error)throw result.error;
+    if(!result.data?.session)throw new Error('Sessão não foi criada.');
+    say('Acesso liberado. Abrindo o sistema...','ok');
+    await cleanupOldCache();
+    openApp();
   }catch(e){
     busy(false);say(friendly(e),'err');
   }
 };
-$('forgot').onclick=async()=>{
+
+$('createBtn').onclick=async()=>{
   try{
     const email=$('email').value.trim().toLowerCase();
-    if(!email)throw new Error('Informe primeiro o e-mail cadastrado.');
-    busy(true);say('Solicitando recuperação...');
+    const password=$('pass').value;
+    if(!email||!password)throw new Error('Informe e-mail e senha.');
+    if(password.length<8)throw new Error('A senha precisa ter pelo menos 8 caracteres.');
+    busy(true,'Criando acesso...');say('Criando seu acesso...');
+    const r=await Promise.race([
+      fetch(SB_URL+'/functions/v1/sst-commercial-signup',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','apikey':SB_KEY},
+        body:JSON.stringify({email,password,fullName:''})
+      }),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tempo de conexão excedido. Tente novamente.')),15000))
+    ]);
+    const out=await r.json().catch(()=>({}));
+    if(!r.ok||!out?.ok)throw new Error(out?.message||'Não foi possível criar o acesso.');
+    const auth=await sb.auth.signInWithPassword({email,password});
+    if(auth.error)throw auth.error;
+    if(!auth.data?.session)throw new Error('Conta criada, mas a sessão não foi iniciada.');
+    say('Acesso criado. Abrindo o sistema...','ok');
+    await cleanupOldCache();
+    openApp();
+  }catch(e){
+    busy(false);say(friendly(e),'err');
+  }
+};
+
+$('forgotBtn').onclick=async()=>{
+  try{
+    const email=$('email').value.trim().toLowerCase();
+    if(!email)throw new Error('Informe seu e-mail.');
+    busy(true,'Enviando...');say('Solicitando recuperação...');
     const redirectTo=new URL('./commercial-reset.html',location.href).href;
     const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
     if(error)throw error;
-    busy(false);say('Pedido enviado. Verifique sua caixa de entrada e também o Spam.','ok');
+    busy(false);say('Link solicitado. Verifique sua caixa de entrada e também o Spam.','ok');
   }catch(e){
     busy(false);say(friendly(e),'err');
   }
 };
-$('email').addEventListener('keydown',e=>{if(e.key==='Enter')$('login').click()});
-$('pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('login').click()});
 
-(async()=>{
-  try{
-    const {data,error}=await sb.auth.getSession();
-    if(error)throw error;
-    if(data?.session){say('Sessão encontrada. Abrindo o sistema...','ok');goApp();return}
-    say('Use o cadastro que já existe no sistema.');
-    $('email').focus();
-  }catch{
-    say('Use o cadastro que já existe no sistema.');
-    $('email').focus();
+try{
+  const {data}=await sb.auth.getSession();
+  if(data?.session){
+    say('Sessão encontrada. Abrindo o sistema...','ok');
+    await cleanupOldCache();
+    openApp();
+    return;
   }
-})();
+}catch{}
+say('Entre para continuar.');
+$('email').focus();
 })();
 </script>
 </body>
