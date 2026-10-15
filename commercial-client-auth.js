@@ -61,7 +61,7 @@ function withTimeout(promise,ms,label){
     new Promise((_,reject)=>setTimeout(()=>reject(new Error(label||'Tempo de carregamento excedido.')),ms))
   ]);
 }
-function waitForInitialSession(api,ms=8000){
+function waitForInitialSession(client,ms=8000){
   return new Promise((resolve,reject)=>{
     let finished=false;
     let subscription=null;
@@ -72,7 +72,7 @@ function waitForInitialSession(api,ms=8000){
       reject(new Error('Não foi possível carregar a sessão neste navegador.'));
     },ms);
 
-    const result=api.sb.auth.onAuthStateChange((event,session)=>{
+    const result=client.auth.onAuthStateChange((event,session)=>{
       if(finished)return;
       if(event==='INITIAL_SESSION'||event==='SIGNED_IN'||event==='TOKEN_REFRESHED'){
         finished=true;
@@ -133,49 +133,20 @@ async function ready(force=false){
     return;
   }
   try{
-    let session=null;
+    let directToken=api.getRuntimeAccessToken?.()||'';
 
-    // Primeiro tenta restaurar diretamente a sessão recebida da tela de Login.
-    // sessionStorage é usado apenas no mesmo navegador/aba e os tokens não vão na URL.
-    try{
-      const raw=sessionStorage.getItem('sst_auth_handoff_v1');
-      if(raw){
-        const handoff=JSON.parse(raw);
-        const fresh=handoff?.created_at && (Date.now()-Number(handoff.created_at))<120000;
-        if(fresh&&handoff?.access_token&&handoff?.refresh_token){
-          const restored=await withTimeout(
-            api.sb.auth.setSession({
-              access_token:String(handoff.access_token),
-              refresh_token:String(handoff.refresh_token)
-            }),
-            8000,
-            'Não foi possível restaurar sua sessão.'
-          );
-          if(restored.error)throw restored.error;
-          session=restored.data?.session||null;
-        }
-        sessionStorage.removeItem('sst_auth_handoff_v1');
+    // Se veio da tela de Login, usa imediatamente o token emitido.
+    // Nenhuma espera por localStorage/getSession é necessária.
+    if(!directToken){
+      const session=await waitForInitialSession(api.authSb,8000);
+      if(session?.access_token){
+        api.setRuntimeTokens?.(session.access_token,session.refresh_token||'');
+        directToken=session.access_token;
       }
-    }catch(e){
-      console.warn('[SST SESSION HANDOFF]',e);
-      try{sessionStorage.removeItem('sst_auth_handoff_v1')}catch{}
     }
 
-    // Fallback oficial do Supabase para acessos diretos/abas já autenticadas.
-    if(!session)session=await waitForInitialSession(api,8000);
-
-    if(!session){
-      location.replace('./?v=mobileauth04');
-      return;
-    }
-    const accessCheck=await withTimeout(
-      api.sb.from('sst_access_accounts').select('id,active,company_id').eq('user_id',session.user.id).eq('active',true).limit(1).maybeSingle(),
-      8000,
-      'Não foi possível validar o Login cadastrado.'
-    );
-    if(accessCheck.error||!accessCheck.data){
-      try{await api.signOut()}catch{}
-      location.replace('./');
+    if(!directToken){
+      location.replace('./?v=mobileauth05');
       return;
     }
 
@@ -194,6 +165,23 @@ async function ready(force=false){
     Promise.resolve()
       .then(()=>withTimeout(api.installCompatibility(),8000,'Preparação complementar excedeu o tempo.'))
       .catch(e=>console.warn('[SST PREPARAÇÃO COMPLEMENTAR]',e));
+
+    // Restaura/renova a sessão Auth em segundo plano, sem bloquear a abertura.
+    const refreshToken=api.getRuntimeRefreshToken?.()||'';
+    const accessToken=api.getRuntimeAccessToken?.()||'';
+    if(accessToken&&refreshToken){
+      Promise.resolve()
+        .then(()=>withTimeout(
+          api.authSb.auth.setSession({access_token:accessToken,refresh_token:refreshToken}),
+          8000,
+          'Restauração de sessão em segundo plano excedeu o tempo.'
+        ))
+        .then(result=>{
+          const s=result?.data?.session;
+          if(s?.access_token)api.setRuntimeTokens?.(s.access_token,s.refresh_token||refreshToken);
+        })
+        .catch(e=>console.warn('[SST SESSÃO EM SEGUNDO PLANO]',e));
+    }
   }catch(e){
     console.error('[SST ACCESS LOAD]',e);
     showError(String(e?.message||'Falha ao carregar o sistema.'));
@@ -203,15 +191,17 @@ async function ready(force=false){
 }
 function bind(){
   const api=window.SSTCommercialCloud;
-  if(!api?.configured||authSubscription)return;
-  const result=api.sb.auth.onAuthStateChange((event,session)=>{
-    if(event==='SIGNED_OUT'){
-      location.replace('./?v=mobileauth04');
+  if(!api?.configured||authSubscription||!api.authSb)return;
+  const result=api.authSb.auth.onAuthStateChange((event,session)=>{
+    if(event==='TOKEN_REFRESHED'&&session?.access_token){
+      api.setRuntimeTokens?.(session.access_token,session.refresh_token||'');
       return;
     }
-    if(event==='TOKEN_REFRESHED'&&authenticated)return;
-    if(event==='SIGNED_IN'&&authenticated)return;
-    // INITIAL_SESSION é tratado por ready(); não redirecionar aqui.
+    if(event==='SIGNED_OUT'&&authenticated){
+      api.setRuntimeTokens?.('','');
+      location.replace('./?v=mobileauth05');
+      return;
+    }
   });
   authSubscription=result?.data?.subscription||true;
 }
