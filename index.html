@@ -112,7 +112,17 @@ $('loginBtn').onclick=async()=>{
   }
 };
 
-$('loginField').focus();
+try{
+  const prefill=new URLSearchParams(location.search).get('login');
+  if(prefill){
+    $('loginField').value=String(prefill).trim().toLowerCase().replace(/\s+/g,'');
+    $('pass').focus();
+  }else{
+    $('loginField').focus();
+  }
+}catch{
+  $('loginField').focus();
+}
 })();
 </script>
 </body>
