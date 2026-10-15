@@ -393,7 +393,7 @@ function openModule(){
   q('#cipaTermStart').onchange=refreshMeetingInfo;
   q('#cipaImportComposition').onclick=importCipaComposition;
   q('#cipaAddMember').onclick=()=>{const list=members();list.push({name:'',role:'Membro Titular'});saveMembers(list);renderMembers();renderPresence()};
-  q('#cipaPreview').onclick=()=>makeCipaPdf('preview');
+  q('#cipaPreview').onclick=showDocumentPreview;
   q('#cipaDownload').onclick=()=>makeCipaPdf('download');
   q('#cipaSave').onclick=saveCurrent;
   q('#cipaShare').onclick=()=>makeCipaPdf('share');
@@ -537,45 +537,88 @@ async function buildCipaPdf(x){
 }
 
 function pdfBlob(doc){
-  return new Promise((resolve,reject)=>{try{window.pdfMake.createPdf(doc).getBlob(blob=>blob&&blob.size?resolve(blob):reject(new Error('PDF vazio.')))}catch(e){reject(e)}});
+  return new Promise((resolve,reject)=>{
+    let done=false;
+    const timer=setTimeout(()=>{
+      if(done)return;
+      done=true;
+      reject(new Error('O PDF demorou demais para ser gerado.'));
+    },15000);
+    try{
+      window.pdfMake.createPdf(doc).getBlob(blob=>{
+        if(done)return;
+        done=true;clearTimeout(timer);
+        blob&&blob.size?resolve(blob):reject(new Error('PDF vazio.'));
+      });
+    }catch(e){
+      if(done)return;
+      done=true;clearTimeout(timer);reject(e);
+    }
+  });
+}
+function showDocumentPreview(){
+  const x=collect();if(!validateMeeting(x))return false;
+  q('#cipaDocPreview')?.remove();
+  const company=window.SST_DEMO_CONFIG?.nomeFantasia||window.SST_DEMO_CONFIG?.razaoSocial||window.SST_COMMERCIAL_CONTEXT?.company?.trade_name||window.SST_COMMERCIAL_CONTEXT?.company?.legal_name||'EMPRESA CADASTRADA';
+  const list=sortCipaMembers(x.members||[]);
+  const lines=String(x.subjects||'').split(/\n+/).map(v=>v.trim()).filter(Boolean);
+  const subjects=lines.length>1
+    ?'<ol style="padding-left:22px">'+lines.map(v=>'<li style="margin:7px 0">'+esc(v)+'</li>').join('')+'</ol>'
+    :'<p style="text-align:justify">'+esc(lines[0]||'Nenhum assunto informado.')+'</p>';
+  const rows=list.map((m,i)=>'<tr><td style="border:1px solid #777;padding:9px;text-align:center">'+(i+1)+'</td><td style="border:1px solid #777;padding:9px">'+esc(m.name)+'</td><td style="border:1px solid #777;padding:9px">'+esc(m.role||'Membro')+'</td><td style="border:1px solid #777;padding:18px"></td></tr>').join('');
+  const o=document.createElement('div');
+  o.id='cipaDocPreview';
+  o.style.cssText='position:fixed;inset:0;z-index:14000;background:#0f172ae8;overflow:auto;padding:14px';
+  o.innerHTML=
+    '<div style="max-width:820px;margin:auto">'+
+      '<div style="position:sticky;top:0;z-index:2;display:flex;gap:8px;justify-content:flex-end;padding:8px 0">'+
+        '<button id="cipaPreviewDownload" class="cipaBtn cipaPrimary">📥 Baixar PDF</button>'+
+        '<button id="cipaPreviewClose" class="cipaBtn cipaSecondary">✕ Fechar</button>'+
+      '</div>'+
+      '<article style="background:#fff;color:#111827;min-height:1120px;padding:58px 64px;border-radius:4px;box-shadow:0 18px 60px #0007;font-family:Arial,Helvetica,sans-serif;line-height:1.55">'+
+        '<div style="text-align:center;font-weight:900;font-size:12px;margin-bottom:18px">'+esc(company)+'</div>'+
+        '<h1 style="text-align:center;font-size:18px;margin:0 0 8px;color:#111827">ATA DA '+esc(ordinal(x.meetingNumber))+' REUNIÃO ORDINÁRIA DA CIPA</h1>'+
+        '<div style="text-align:center;font-size:13px;font-weight:700;margin-bottom:24px">GESTÃO '+esc(x.term)+'</div>'+
+        '<hr style="border:0;border-top:1px solid #111;margin-bottom:28px">'+
+        '<p style="text-align:justify;white-space:pre-line">'+esc(introText(x.date,x.startTime))+'</p>'+
+        '<h2 style="font-size:14px;margin-top:24px">ASSUNTOS E AÇÕES DISCUTIDOS</h2>'+
+        subjects+
+        '<p style="text-align:justify;margin-top:24px">'+esc(closingText(x.endTime))+'</p>'+
+        '<h2 style="font-size:14px;margin-top:30px">MEMBROS PRESENTES E ASSINATURAS</h2>'+
+        '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="border:1px solid #777;padding:7px;width:36px">Nº</th><th style="border:1px solid #777;padding:7px">NOME</th><th style="border:1px solid #777;padding:7px">FUNÇÃO</th><th style="border:1px solid #777;padding:7px;width:180px">ASSINATURA</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+        '<div style="text-align:center;font-size:10px;color:#64748b;margin-top:32px">Documento emitido pelo Sistema de Gestão SST</div>'+
+      '</article>'+
+    '</div>';
+  document.body.appendChild(o);
+  q('#cipaPreviewClose').onclick=()=>o.remove();
+  q('#cipaPreviewDownload').onclick=()=>makeCipaPdf('download');
+  o.addEventListener('click',e=>{if(e.target===o)o.remove()});
+  return true;
 }
 async function makeCipaPdf(action='preview'){
+  if(action==='preview')return showDocumentPreview();
   const x=collect();if(!validateMeeting(x))return false;
-
-  // Abre a aba no mesmo gesto do usuário; navegadores móveis bloqueiam
-  // window.open quando ele acontece somente depois de awaits demorados.
-  let preview=null;
-  if(action==='preview'){
-    try{
-      preview=window.open('about:blank','_blank');
-      if(preview){
-        preview.document.write('<!doctype html><meta charset="utf-8"><title>Gerando Ata da CIPA</title><style>body{font-family:Arial;padding:28px;color:#17202b} .box{max-width:520px;margin:40px auto;padding:24px;border:1px solid #ddd;border-radius:16px}</style><div class="box"><h2>Gerando Ata da CIPA...</h2><p>O documento será exibido nesta aba.</p></div>');
-        preview.document.close();
-      }
-    }catch(_){}
-  }
-
   try{
     const built=await buildCipaPdf(x);
-    if(action==='download'){window.pdfMake.createPdf(built.doc).download(built.filename);return true}
-    if(action==='share'){
-      const blob=await pdfBlob(built.doc);
-      const file=new File([blob],built.filename,{type:'application/pdf'});
-      if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({title:built.title,text:'Ata da CIPA • '+formatDateBR(x.date),files:[file]});return true}
+    if(action==='download'){
       window.pdfMake.createPdf(built.doc).download(built.filename);
       return true;
     }
-    const blob=await pdfBlob(built.doc),url=URL.createObjectURL(blob);
-    if(preview){
-      preview.location.replace(url);
-      setTimeout(()=>URL.revokeObjectURL(url),300000);
+    if(action==='share'){
+      try{
+        const blob=await pdfBlob(built.doc);
+        const file=new File([blob],built.filename,{type:'application/pdf'});
+        if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){
+          await navigator.share({title:built.title,text:'Ata da CIPA • '+formatDateBR(x.date),files:[file]});
+          return true;
+        }
+      }catch(e){console.warn('[CIPA SHARE PDF]',e)}
+      window.pdfMake.createPdf(built.doc).download(built.filename);
       return true;
     }
-    window.pdfMake.createPdf(built.doc).download(built.filename);
-    return true;
+    return showDocumentPreview();
   }catch(e){
     console.error('[CIPA PDF]',e);
-    try{if(preview&&!preview.closed)preview.close()}catch(_){}
     alert(e?.message||'Não foi possível gerar a ata.');
     return false;
   }
