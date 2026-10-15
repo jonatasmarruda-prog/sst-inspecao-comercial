@@ -105,6 +105,9 @@ $('loginBtn').onclick=async()=>{
     // Entrega explícita da sessão para o app. Isso evita travas em WebViews
     // e navegadores móveis que demoram para restaurar o storage do Supabase.
     try{
+      sessionStorage.setItem('sst_runtime_access_token',result.data.session.access_token);
+      sessionStorage.setItem('sst_runtime_refresh_token',result.data.session.refresh_token);
+      sessionStorage.setItem('sst_runtime_created_at',String(Date.now()));
       sessionStorage.setItem('sst_auth_handoff_v1',JSON.stringify({
         access_token:result.data.session.access_token,
         refresh_token:result.data.session.refresh_token,
@@ -114,7 +117,7 @@ $('loginBtn').onclick=async()=>{
 
     say('Acesso liberado. Abrindo o sistema...','ok');
     await clearOldCache();
-    location.replace('./app.html?access=ok&v=mobileauth04');
+    location.replace('./app.html?access=ok&v=mobileauth05');
   }catch(e){
     busy(false);
     const t=String(e?.message||e||'Não foi possível entrar.');
