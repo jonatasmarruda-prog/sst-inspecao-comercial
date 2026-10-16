@@ -74,8 +74,17 @@ async function openAta(){return loadAndClick('cipa-ata-module.js','tbmCipaTile')
 async function openBrig(){
   await script('brigadistas-control-module.js');
   await new Promise(r=>setTimeout(r,20));
-  if(typeof window.openBrigadistasControl==='function')return window.openBrigadistasControl();
-  return loadAndClick('brigadistas-control-module.js','tbmBrigTile');
+  const generated=document.getElementById('tbmBrigTile');
+  if(typeof window.openBrigadistasControl==='function'){
+    generated?.remove();
+    return window.openBrigadistasControl();
+  }
+  if(generated){
+    generated.click();
+    setTimeout(()=>generated.remove(),0);
+    return;
+  }
+  throw new Error('Brigadistas não inicializou');
 }
 async function openExt(){
   await script('extintores-control-module.js');
@@ -84,13 +93,11 @@ async function openExt(){
   return loadAndClick('extintores-control-module.js','tbmExtTile');
 }
 async function openSecurity(){return loadAndClick('system-safety-module.js','tbmSystemSecurityTile')}
-async function openEmployees(){
-  await script('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
-  await script('commercial-employees.js');
-  await new Promise(r=>setTimeout(r,20));
-  if(typeof window.SSTEmployees?.open==='function')return window.SSTEmployees.open();
-  const b=document.getElementById('seOpenEmployees');if(b)return b.click();
-  throw new Error('Funcionários não inicializou');
+async function openTechnicians(){
+  const settings=window.SSTCompanySettings;
+  if(settings?.openTechnicians)return await settings.openTechnicians();
+  if(settings?.open)return await settings.open();
+  throw new Error('Cadastro de técnicos não inicializou');
 }
 async function openPT(){
   await script('pt-altura.js');
@@ -130,7 +137,7 @@ function install(){
   make('lazyExt','fire','🧯','Controle de Extintores','Recargas, vencimentos e testes',openExt);
   make('lazyPT','machine','🪜','Permissão de Trabalho (PT)','NR 35 • Escadas, Andaimes e PTA',openPT);
   make('lazySecurity','safety','🛡️','Segurança do Sistema','Backup, alterações e sincronização',openSecurity);
-  make('lazyEmployees','general','👥','Funcionários','Cadastro e importação da equipe',openEmployees);
+  make('lazyEmployees','general','👷','Técnicos de Segurança','Nomes que assinam e aparecem nos relatórios',openTechnicians);
   ensureWordActivation();
   window.__sstCommercialLazyReady=true;
 }
