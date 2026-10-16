@@ -93,12 +93,6 @@ async function openExt(){
   return loadAndClick('extintores-control-module.js','tbmExtTile');
 }
 async function openSecurity(){return loadAndClick('system-safety-module.js','tbmSystemSecurityTile')}
-async function openTechnicians(){
-  const settings=window.SSTCompanySettings;
-  if(settings?.openTechnicians)return await settings.openTechnicians();
-  if(settings?.open)return await settings.open();
-  throw new Error('Cadastro de técnicos não inicializou');
-}
 async function openPT(){
   await script('pt-altura.js');
   script('pt-contrast-fix.js').catch(()=>{});
@@ -137,7 +131,6 @@ function install(){
   make('lazyExt','fire','🧯','Controle de Extintores','Recargas, vencimentos e testes',openExt);
   make('lazyPT','machine','🪜','Permissão de Trabalho (PT)','NR 35 • Escadas, Andaimes e PTA',openPT);
   make('lazySecurity','safety','🛡️','Segurança do Sistema','Backup, alterações e sincronização',openSecurity);
-  make('lazyEmployees','general','👷','Técnicos de Segurança','Nomes que assinam e aparecem nos relatórios',openTechnicians);
   ensureWordActivation();
   window.__sstCommercialLazyReady=true;
 }
