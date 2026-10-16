@@ -77,6 +77,9 @@ function installCss(){
   document.head.appendChild(s);
 }
 function ensureTile(){
+  // No comercial, o cartão leve lazyBrig já representa este módulo.
+  // Nunca criar um segundo cartão de Brigadistas.
+  if($('#lazyBrig'))return;
   if($('#tbmBrigTile'))return;const tiles=$('#home .tiles');if(!tiles)return;
   const b=document.createElement('button');b.id='tbmBrigTile';b.className='tile general';
   b.innerHTML='<div class="ico">🚨</div><div><b>Brigadistas</b><span>Cadastro, treinamentos e presença mensal</span></div>';
