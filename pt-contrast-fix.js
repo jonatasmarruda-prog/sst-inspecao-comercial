@@ -155,6 +155,107 @@ function injectPTContrast(){
       color:#f4f6f8!important;
       -webkit-text-fill-color:#f4f6f8!important;
     }
+
+    /* CONTRASTE TOTAL DA PT - MOBILE */
+    #ptAlturaOverlay{
+      color:#17202b!important;
+      -webkit-text-fill-color:initial!important;
+    }
+
+    #ptAlturaOverlay main,
+    #ptAlturaOverlay .wrap{
+      color:#17202b!important;
+    }
+
+    #ptAlturaOverlay .card,
+    #ptAlturaOverlay .card *,
+    #ptAlturaOverlay .pt-select-box,
+    #ptAlturaOverlay .pt-select-box *,
+    #ptAlturaOverlay .pt-check-group,
+    #ptAlturaOverlay .pt-check-group *,
+    #ptAlturaOverlay .pt-check-item,
+    #ptAlturaOverlay .pt-check-item *,
+    #ptAlturaOverlay .pt-worker,
+    #ptAlturaOverlay .pt-worker *,
+    #ptAlturaOverlay .pt-fixed-issuer,
+    #ptAlturaOverlay .pt-fixed-issuer *{
+      color:#17202b!important;
+      -webkit-text-fill-color:#17202b!important;
+    }
+
+    #ptAlturaOverlay .card,
+    #ptAlturaOverlay .pt-select-box,
+    #ptAlturaOverlay .pt-check-group,
+    #ptAlturaOverlay .pt-check-item,
+    #ptAlturaOverlay .pt-worker{
+      background:#ffffff!important;
+    }
+
+    #ptAlturaOverlay .field label,
+    #ptAlturaOverlay .sectionTitle,
+    #ptAlturaOverlay .mini,
+    #ptAlturaOverlay p,
+    #ptAlturaOverlay span,
+    #ptAlturaOverlay small,
+    #ptAlturaOverlay strong,
+    #ptAlturaOverlay b{
+      opacity:1!important;
+    }
+
+    #ptAlturaOverlay .field label,
+    #ptAlturaOverlay .sectionTitle,
+    #ptAlturaOverlay .mini,
+    #ptAlturaOverlay p,
+    #ptAlturaOverlay small{
+      color:#334155!important;
+      -webkit-text-fill-color:#334155!important;
+    }
+
+    #ptAlturaOverlay input,
+    #ptAlturaOverlay textarea,
+    #ptAlturaOverlay select,
+    #ptAlturaOverlay option{
+      background:#ffffff!important;
+      color:#111827!important;
+      -webkit-text-fill-color:#111827!important;
+      caret-color:#111827!important;
+      opacity:1!important;
+    }
+
+    #ptAlturaOverlay input::placeholder,
+    #ptAlturaOverlay textarea::placeholder{
+      color:#64748b!important;
+      -webkit-text-fill-color:#64748b!important;
+      opacity:1!important;
+    }
+
+    /* Áreas escuras precisam permanecer com texto branco */
+    #ptAlturaOverlay .ptbar,
+    #ptAlturaOverlay .ptbar *,
+    #ptAlturaOverlay .btn.primary,
+    #ptAlturaOverlay .btn.primary *,
+    #ptAlturaOverlay .btn.danger,
+    #ptAlturaOverlay .btn.danger *,
+    #ptAlturaOverlay .pt-check-actions button.ok,
+    #ptAlturaOverlay .pt-check-actions button.no,
+    #ptAlturaOverlay .pt-check-actions button.na{
+      color:#ffffff!important;
+      -webkit-text-fill-color:#ffffff!important;
+    }
+
+    #ptAlturaOverlay .btn.secondary{
+      color:#ffffff!important;
+      -webkit-text-fill-color:#ffffff!important;
+    }
+
+    @media(max-width:650px){
+      #ptAlturaOverlay .field label,
+      #ptAlturaOverlay .mini,
+      #ptAlturaOverlay p,
+      #ptAlturaOverlay span{
+        opacity:1!important;
+      }
+    }
   `;
   document.head.appendChild(s);
 }
