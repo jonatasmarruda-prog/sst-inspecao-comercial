@@ -1,5 +1,47 @@
-const CACHE='inspecao-sst-comercial-v174';
-const CORE=['./commercial-env.js','./commercial-supabase.js','./commercial-license-gate.js','./commercial-client-auth.js','./commercial-company-settings.js','./commercial-admin.html','./commercial-reset.html','./sst-resilience-guard.js','./','./index.html','./icon.svg','./manifest.json','./premium.css','./premium.js','./integracao-modulos.js','./local-history.js','./extintor-enhancements.js','./sst-repair-loader.js','./global-pdf-preview.js','./solid-status-badges.js','./photo-multi-fix.js','./save-button-fix.js','./cnpj-autofill.js','./fire-checklist-split.js','./pt-altura.js','./pt-contrast-fix.js','./pt-share-preview-fix.js','./pt-renovacao-nr35.js','./premium-ux.js','./mobile-performance-fix.js','./mobile-interaction-fix.js','./email-relatorio-auto.js','./nr24-module.js','./training-attendance-module.js','./training-attendance-refinement.js','./cipa-ata-module.js','./cipa-management-module.js','./brigadistas-control-module.js','./extintores-control-module.js','./system-safety-module.js','./cipa-inscricao.html','./accident-injury-module.js','./accident-diagnosis-conditional.js','./pdf-global-standard.js','./pdf-filename-global.js','./pdf-final-fix.js','./pdf-layout-fix.js'];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(async cache=>{for(const url of CORE){try{const r=await fetch(url+'?v=174',{cache:'no-store'});if(r.ok)await cache.put(url,r)}catch(e){}}}).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('inspecao-sst-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
-self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const u=new URL(event.request.url);if(u.origin!==location.origin)return;event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{if(response.ok)caches.open(CACHE).then(c=>c.put(event.request,response.clone())).catch(()=>{});return response}).catch(()=>{const clean=new Request(u.origin+u.pathname);return caches.match(event.request).then(r=>r||caches.match(clean)).then(r=>{if(r)return r;if(event.request.mode==='navigate')return caches.match('./index.html');return new Response('',{status:503,statusText:'Offline'})})}))});
+/* SST Comercial PWA, independente do aplicativo TBM original.
+   Cache apenas de recursos estáticos do próprio domínio: nunca persiste
+   respostas da API Supabase ou dados dos clientes. */
+const CACHE='sst-comercial-install-v175';
+const BASE=new URL('./',self.registration.scope);
+const CORE=['./','./index.html','./app.html','./manifest.json','./commercial-pwa-install.js','./icon.svg','./icon-192.png','./icon-512.png'];
+self.addEventListener('install',e=>{
+ e.waitUntil(caches.open(CACHE).then(async cache=>{
+  await Promise.allSettled(CORE.map(async file=>{
+   const target=new URL(file,BASE);
+   const response=await fetch(target,{cache:'no-store'});
+   if(response.ok&&response.type!=='opaque')await cache.put(target,response);
+  }));
+ }).then(()=>self.skipWaiting()));
+});
+self.addEventListener('activate',e=>{
+ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>
+  (k.startsWith('inspecao-sst-comercial-')||k.startsWith('sst-comercial-install-'))&&k!==CACHE
+ ).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+});
+self.addEventListener('fetch',e=>{
+ const req=e.request;
+ if(req.method!=='GET')return;
+ const url=new URL(req.url);
+ if(url.origin!==self.location.origin||!url.pathname.startsWith(BASE.pathname))return;
+ // Não armazenar arquivos com parâmetros sensíveis; scripts e a interface
+ // têm estratégia network-first e fallback somente aos arquivos estáticos.
+ e.respondWith(fetch(req,{cache:'no-store'}).then(response=>{
+  if(response.ok&&response.type!=='opaque'&&
+    !url.searchParams.has('access')&&
+    !url.searchParams.has('token')&&
+    !url.searchParams.has('code')){
+   const cacheKey=new URL(url.pathname,url.origin).href;
+   const saved=response.clone();
+   e.waitUntil(caches.open(CACHE).then(cache=>cache.put(cacheKey,saved)).catch(()=>{}));
+  }
+  return response;
+ }).catch(async()=>{
+  const cached=await caches.match(new URL(url.pathname,url.origin).href);
+  if(cached)return cached;
+  if(req.mode==='navigate'){
+   const login=await caches.match(new URL('index.html',BASE).href);
+   if(login)return login;
+  }
+  return new Response('É necessária conexão com a internet para entrar e sincronizar.',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});
+ }));
+});
