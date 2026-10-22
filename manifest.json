@@ -1,19 +1,18 @@
 {
-  "id": "/",
-  "name": "Sistema de Gestão SST",
-  "short_name": "SST",
-  "description": "Sistema profissional de inspeções de Segurança e Saúde no Trabalho.",
+  "id": "./index.html",
+  "name": "SST Comercial • Gestão de Segurança",
+  "short_name": "SST Comercial",
+  "description": "Sistema Comercial de Gestão de Segurança e Saúde no Trabalho. Acesso controlado por login e licença.",
   "lang": "pt-BR",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "display_override": [
-    "standalone",
-    "fullscreen"
+    "standalone"
   ],
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#f8fafc",
-  "theme_color": "#8b1018",
+  "theme_color": "#075985",
   "categories": [
     "business",
     "productivity"
@@ -21,16 +20,22 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icon.svg?v=20261006-02",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon.svg?v=20261006-02",
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "maskable"
+      "purpose": "any"
     }
   ]
 }
