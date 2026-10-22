@@ -47,6 +47,7 @@ function refreshButtons(){
  const installed=standalone();
  document.querySelectorAll('[data-sst-install]').forEach(btn=>{
   btn.hidden=installed;
+  btn.style.display=installed?'none':'block';
   btn.textContent=label();
   btn.disabled=false;
  });
