@@ -89,8 +89,19 @@ async function openBrig(){
 async function openExt(){
   await script('extintores-control-module.js');
   await new Promise(r=>setTimeout(r,20));
-  if(typeof window.openExtinguisherControl==='function')return window.openExtinguisherControl();
-  return loadAndClick('extintores-control-module.js','tbmExtTile');
+  // O módulo antigo cria tbmExtTile, mas o acesso comercial já possui lazyExt.
+  // Remover apenas o botão duplicado, sem alterar cadastros ou a função do módulo.
+  const generated=document.getElementById('tbmExtTile');
+  if(typeof window.openExtinguisherControl==='function'){
+    generated?.remove();
+    return window.openExtinguisherControl();
+  }
+  if(generated){
+    generated.click();
+    setTimeout(()=>generated.remove(),0);
+    return;
+  }
+  throw new Error('Controle de Extintores não inicializou');
 }
 async function openSecurity(){return loadAndClick('system-safety-module.js','tbmSystemSecurityTile')}
 async function openPT(){
@@ -129,6 +140,8 @@ function install(){
   make('lazyCipaAta','general','📝','Ata da CIPA','Reunião mensal ou extraordinária',openAta);
   make('lazyBrig','general','🚨','Brigadistas','Cadastro, treinamentos e presença',openBrig);
   make('lazyExt','fire','🧯','Controle de Extintores','Recargas, vencimentos e testes',openExt);
+  // Reabrir o painel não pode criar duas entradas para o mesmo controle.
+  if(document.getElementById('lazyExt'))document.getElementById('tbmExtTile')?.remove();
   make('lazyPT','machine','🪜','Permissão de Trabalho (PT)','NR 35 • Escadas, Andaimes e PTA',openPT);
   make('lazySecurity','safety','🛡️','Segurança do Sistema','Backup, alterações e sincronização',openSecurity);
   ensureWordActivation();
