@@ -37,3 +37,14 @@ html[data-sst-theme="light"] #sst-commercial-modules textarea{background:#fff!im
 html[data-sst-theme="light"] #sst-commercial-modules button{background:#f1f5f9!important;color:#17202b!important;border-color:#cbd5e1!important}
 html[data-sst-theme="light"] #sst-commercial-modules label,html[data-sst-theme="light"] #sst-commercial-modules strong{color:#17202b!important}
 html[data-sst-theme="light"] .tile{color:#fff!important}
+
+/* Correção específica das telas vistas no Android: não deixar textos claros sobre cartões claros. */
+html[data-sst-theme="light"] .today{background:#edf2f7!important;color:#17202b!important;border:1px solid #cbd5e1!important}
+html[data-sst-theme="light"] .today small,html[data-sst-theme="light"] .today strong,html[data-sst-theme="light"] .today span{color:#17202b!important;opacity:1!important}
+html[data-sst-theme="light"] .sectionTitle,html[data-sst-theme="light"] .card .sectionTitle{color:#17202b!important}
+html[data-sst-theme="light"] .hero h1,html[data-sst-theme="light"] .hero .title,html[data-sst-theme="light"] .card h1,html[data-sst-theme="light"] .card h2,html[data-sst-theme="light"] .card h3{color:#17202b!important}
+html[data-sst-theme="dark"] .today{background:#101827!important;color:#f8fafc!important}
+html[data-sst-theme="dark"] .sectionTitle,html[data-sst-theme="dark"] .card .sectionTitle{color:#f8fafc!important}
+html[data-sst-theme="dark"] .hero h1,html[data-sst-theme="dark"] .hero .title,html[data-sst-theme="dark"] .card h1,html[data-sst-theme="dark"] .card h2,html[data-sst-theme="dark"] .card h3{color:#f8fafc!important}
+html[data-sst-theme="light"] .equipment,html[data-sst-theme="light"] .photoCard,html[data-sst-theme="light"] .check{background:#fff!important;color:#17202b!important;border-color:#d8dee7!important}
+html[data-sst-theme="dark"] .equipment,html[data-sst-theme="dark"] .photoCard,html[data-sst-theme="dark"] .check{background:#182438!important;color:#f8fafc!important;border-color:#475569!important}
