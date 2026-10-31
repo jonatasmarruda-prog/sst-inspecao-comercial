@@ -1,0 +1,21 @@
+/* Tema comercial: contraste acessível em componentes base e módulos carregados */
+html[data-sst-theme="dark"]{color-scheme:dark;--bg:#0b1220;--ink:#f1f5f9;--muted:#cbd5e1;--line:#475569;--green:#166534;--blue:#1d4ed8}
+html[data-sst-theme="dark"] body{background:var(--bg)!important;color:var(--ink)!important}
+html[data-sst-theme="dark"] .card,html[data-sst-theme="dark"] .hero,html[data-sst-theme="dark"] .historyItem,html[data-sst-theme="dark"] .modalbox,html[data-sst-theme="dark"] .actionCard{background:#182438!important;color:#f1f5f9!important;border-color:#475569!important}
+html[data-sst-theme="dark"] .hero{background:linear-gradient(135deg,#172338,#24334b)!important}
+html[data-sst-theme="dark"] .counter div,html[data-sst-theme="dark"] .accident-cause{background:#26364b!important;color:#f1f5f9!important;border-color:#475569!important}
+html[data-sst-theme="dark"] .field input,html[data-sst-theme="dark"] .field textarea,html[data-sst-theme="dark"] .field select,html[data-sst-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),html[data-sst-theme="dark"] textarea,html[data-sst-theme="dark"] select{background:#101c2e!important;color:#f8fafc!important;border-color:#64748b!important}
+html[data-sst-theme="dark"] input::placeholder,html[data-sst-theme="dark"] textarea::placeholder{color:#b6c4d5!important;opacity:1}
+html[data-sst-theme="dark"] .secondary{background:#334155!important;color:#f8fafc!important}
+html[data-sst-theme="dark"] .info,html[data-sst-theme="dark"] .notice{background:#213653!important;color:#e0efff!important}
+html[data-sst-theme="dark"] .successbox{background:#133b30!important;color:#d1fae5!important}
+html[data-sst-theme="dark"] .errorbox{background:#4a1d29!important;color:#ffe4e6!important}
+html[data-sst-theme="dark"] .field label,html[data-sst-theme="dark"] .mini,html[data-sst-theme="dark"] .hero p,html[data-sst-theme="dark"] .statusline{color:#cbd5e1!important}
+html[data-sst-theme="dark"] #sst-commercial-modules section{background:#182438!important;color:#f1f5f9!important}
+html[data-sst-theme="dark"] #sst-commercial-modules textarea{background:#101c2e!important;color:#f8fafc!important;border-color:#64748b!important}
+html[data-sst-theme="dark"] #sst-commercial-modules button{background:#334155!important;color:#f8fafc!important;border-color:#64748b!important}
+html[data-sst-theme="dark"] #sst-commercial-modules #scmBody>div{border-color:#475569!important}
+html[data-sst-theme="dark"] #sst-commercial-modules strong,html[data-sst-theme="dark"] #sst-commercial-modules label{color:#f1f5f9!important}
+html[data-sst-theme="dark"] .tile{color:#fff!important}
+#sstThemeSwitch{margin-left:auto;border:1px solid #ffffff88;border-radius:10px;padding:9px 12px;background:#ffffff20;color:#fff;font-weight:800;white-space:nowrap}
+#sstThemeSwitch:focus-visible{outline:3px solid #facc15;outline-offset:2px}
