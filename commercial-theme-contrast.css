@@ -19,3 +19,21 @@ html[data-sst-theme="dark"] #sst-commercial-modules strong,html[data-sst-theme="
 html[data-sst-theme="dark"] .tile{color:#fff!important}
 #sstThemeSwitch{margin-left:auto;border:1px solid #ffffff88;border-radius:10px;padding:9px 12px;background:#ffffff20;color:#fff;font-weight:800;white-space:nowrap}
 #sstThemeSwitch:focus-visible{outline:3px solid #facc15;outline-offset:2px}
+
+/* A volta ao modo claro deve sobrescrever também estilos escuros herdados e inline. */
+html[data-sst-theme="light"]{color-scheme:light!important;--bg:#eef2f6;--ink:#17202b;--muted:#64748b;--line:#d8dee7;--green:#15803d;--blue:#175cd3}
+html[data-sst-theme="light"] body{background:#eef2f6!important;color:#17202b!important}
+html[data-sst-theme="light"] .card,html[data-sst-theme="light"] .hero,html[data-sst-theme="light"] .historyItem,html[data-sst-theme="light"] .modalbox,html[data-sst-theme="light"] .actionCard{background:#fff!important;color:#17202b!important;border-color:#d8dee7!important}
+html[data-sst-theme="light"] .hero{background:linear-gradient(135deg,#fff,#f8fafc)!important}
+html[data-sst-theme="light"] .counter div,html[data-sst-theme="light"] .accident-cause{background:#f1f5f9!important;color:#17202b!important}
+html[data-sst-theme="light"] .field input,html[data-sst-theme="light"] .field select,html[data-sst-theme="light"] .field textarea,html[data-sst-theme="light"] input:not([type="checkbox"]):not([type="radio"]),html[data-sst-theme="light"] textarea,html[data-sst-theme="light"] select{background:#fff!important;color:#17202b!important;border-color:#cbd5e1!important}
+html[data-sst-theme="light"] .secondary{background:#e8edf3!important;color:#17202b!important}
+html[data-sst-theme="light"] .info,html[data-sst-theme="light"] .notice{background:#eff6ff!important;color:#1e40af!important}
+html[data-sst-theme="light"] .successbox{background:#ecfdf5!important;color:#166534!important}
+html[data-sst-theme="light"] .errorbox{background:#fef2f2!important;color:#991b1b!important}
+html[data-sst-theme="light"] .field label,html[data-sst-theme="light"] .mini{color:#475569!important}
+html[data-sst-theme="light"] #sst-commercial-modules section{background:#fff!important;color:#17202b!important}
+html[data-sst-theme="light"] #sst-commercial-modules textarea{background:#fff!important;color:#17202b!important;border-color:#cbd5e1!important}
+html[data-sst-theme="light"] #sst-commercial-modules button{background:#f1f5f9!important;color:#17202b!important;border-color:#cbd5e1!important}
+html[data-sst-theme="light"] #sst-commercial-modules label,html[data-sst-theme="light"] #sst-commercial-modules strong{color:#17202b!important}
+html[data-sst-theme="light"] .tile{color:#fff!important}
