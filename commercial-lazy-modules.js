@@ -41,6 +41,7 @@ function make(id,cls,icon,title,sub,onClick){
     try{await onClick()}
     catch(err){
       console.error('[SST LAZY]',title,err);
+      if(b.id==='lazyExt' && document.getElementById('extOv'))return;
       alert('Não foi possível abrir '+title+'. Tente novamente.');
     }finally{
       b.dataset.loading='0';
