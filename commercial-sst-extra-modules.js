@@ -45,7 +45,7 @@ function render(){
 }
 async function open(type){
  if(!TYPES[type])return;selected=type;ensureUI();overlay.style.display='block';overlay.querySelector('#scmTitle').textContent=TYPES[type].title;overlay.querySelector('#scmBody').replaceChildren();status('Carregando registros da empresa...');
- try{await cloud().loadContext();await load();status('');if(type==='apr'||type==='dds')form(null);else render()}catch(e){status('Não foi possível carregar os dados: '+e.message,true)}
+ try{if(type==='apr'||type==='dds'){form(null);status('');cloud().loadContext().then(()=>load()).catch(e=>{console.warn('[SST MODULE]',e);status('Preencha o formulário. Sincronização pendente: '+e.message,true)});return}await cloud().loadContext();await load();status('');render()}catch(e){status('Não foi possível carregar os dados: '+e.message,true)}
 }
 window.SSTCommercialModules={open};
 })();
