@@ -25,6 +25,11 @@ function requireConfig(){
   if(!window.supabase?.createClient)throw new Error('Biblioteca Supabase indisponível.');
   sb=window.supabase.createClient(cfg.supabaseUrl,cfg.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 }
+function readableError(e){
+  const raw=String(e?.message||e||'Erro desconhecido');
+  if(/failed to fetch|fetch failed|networkerror|network error|load failed|cors|aborterror/i.test(raw))return 'Falha na conexão com o servidor de autenticação Supabase. Verifique se o projeto cbyoetsdhohmrpzjrttf está ativo e se sua rede permite acesso a supabase.co. Você pode usar “Testar conexão” abaixo.';
+  return raw;
+}
 function statusClass(s){return ['active','trial','demo','pending','blocked','expired'].includes(s)?s:''}
 function fmt(v){if(!v)return'—';try{return new Date(v).toLocaleString('pt-BR')}catch{return String(v)}}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -50,8 +55,8 @@ async function login(){
       throw error;
     }
     await ensureAdmin();
-    $('loginCard').classList.add('hidden');$('app').classList.remove('hidden');await load();
-  }catch(e){msg(e.message||'Falha no acesso.',true)}
+    $('loginCard').classList.add('hidden');$('app').classList.remove('hidden');genPassword();await load();
+  }catch(e){msg(readableError(e),true)}
   finally{button.disabled=false;button.textContent='Entrar'}
 }
 async function forgotAdminPassword(){
@@ -59,11 +64,26 @@ async function forgotAdminPassword(){
     msg('');
     const email=$('adminEmail').value.trim().toLowerCase()||'jonatasmarruda@gmail.com';
     if(email!=='jonatasmarruda@gmail.com')throw new Error('Informe o e-mail administrador cadastrado.');
-    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/commercial-reset.html'});
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:new URL('./commercial-reset.html',location.href).href});
     if(error)throw error;
     msg('E-mail de recuperação enviado para '+email+'. Abra a mensagem e crie uma nova senha.',false,true);
-  }catch(e){msg(e.message||'Não foi possível enviar a recuperação de senha.',true)}
+  }catch(e){msg(readableError(e),true)}
 }
+async function testBackend(){
+  const btn=$('adminCheck');
+  btn.disabled=true;btn.textContent='Testando conexão…';
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),10000);
+  try{
+    const url=cfg.supabaseUrl.replace(/\/$/,'')+'/auth/v1/health';
+    const res=await fetch(url,{method:'GET',mode:'cors',cache:'no-store',signal:controller.signal});
+    if(!res.ok)throw new Error('Serviço de autenticação respondeu HTTP '+res.status);
+    msg('Conexão com Supabase disponível. Se não conseguir entrar, confira senha e permissão de administrador.',false,true);
+  }catch(e){
+    msg('O teste não conseguiu se conectar ao projeto Supabase configurado (cbyoetsdhohmrpzjrttf). Confira se está ativo e acessível. Detalhe: '+String(e?.message||e),true);
+  }finally{clearTimeout(timer);btn.disabled=false;btn.textContent='Testar conexão';}
+}
+
 async function createAdminAccess(){
   try{
     msg('');
@@ -238,13 +258,10 @@ function switchTab(name){
 async function boot(){
   try{
     requireConfig();
-    const {data}=await sb.auth.getSession();
-    if(data?.session){
-      try{await ensureAdmin();$('loginCard').classList.add('hidden');$('app').classList.remove('hidden');genPassword();await load()}catch(_){}
-    }
+    genPassword();
     $('adminLogin').onclick=login;
     ['adminEmail','adminPass'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();login()}}));
-    $('adminForgot').onclick=forgotAdminPassword;$('adminCreate').onclick=createAdminAccess;
+    $('adminForgot').onclick=forgotAdminPassword;$('adminCreate').onclick=createAdminAccess;$('adminCheck').onclick=testBackend;
     $('adminEye').onclick=()=>{const p=$('adminPass'),show=p.type==='password';p.type=show?'text':'password';$('adminEye').textContent=show?'🙈':'👁️';$('adminEye').title=show?'Ocultar senha':'Mostrar senha'};
     $('adminLogout').onclick=async()=>{await sb.auth.signOut();location.reload()};
     $('refresh').onclick=load;$('refreshLogins').onclick=load;$('search').oninput=render;$('loginSearch').oninput=renderLogins;
@@ -276,7 +293,14 @@ async function boot(){
 
     setInterval(()=>{if(!$('app').classList.contains('hidden'))load().catch(()=>{})},30000);
     window.addEventListener('focus',()=>{if(!$('app').classList.contains('hidden'))load().catch(()=>{})});
-  }catch(e){msg(e.message,true)}
+    try{
+      const {data,error}=await sb.auth.getSession();
+      if(error)throw error;
+      if(data?.session){
+        await ensureAdmin();$('loginCard').classList.add('hidden');$('app').classList.remove('hidden');await load();
+      }
+    }catch(e){msg(readableError(e),true)}
+  }catch(e){msg(readableError(e),true)}
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
