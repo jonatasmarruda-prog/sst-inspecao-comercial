@@ -76,7 +76,7 @@ async function testBackend(){
   const timer=setTimeout(()=>controller.abort(),10000);
   try{
     const url=cfg.supabaseUrl.replace(/\/$/,'')+'/auth/v1/health';
-    const res=await fetch(url,{method:'GET',mode:'cors',cache:'no-store',signal:controller.signal});
+    const res=await fetch(url,{method:'GET',headers:{apikey:cfg.publishableKey},mode:'cors',cache:'no-store',signal:controller.signal});
     if(!res.ok)throw new Error('Serviço de autenticação respondeu HTTP '+res.status);
     msg('Conexão com Supabase disponível. Se não conseguir entrar, confira senha e permissão de administrador.',false,true);
   }catch(e){
